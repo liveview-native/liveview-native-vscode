@@ -2,9 +2,12 @@ import * as path from 'path';
 import * as glob from 'glob';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { exec } from 'child_process';
+import * as util from 'util';
+import * as crypto from 'crypto';
+import { exec as execCallback } from 'child_process';
+const exec = util.promisify(execCallback);
+import * as markdown from './markdown';
 
-const camelToSnake = (str: string): string => str.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
 const snakeToCamel = (str: string): string =>
 str.toLowerCase().replace(/([-_][a-z])/g, group =>
     group
@@ -12,39 +15,6 @@ str.toLowerCase().replace(/([-_][a-z])/g, group =>
       .replace('-', '')
       .replace('_', '')
   );
-
-function parseInline(inline: any): string {
-	switch (inline.type) {
-	case "text":
-		return inline.text;
-	case "codeVoice":
-		return `\`${inline.code}\``;
-	case "reference":
-		return `\`${inline.identifier.split('/').at(-1)}\``;
-	default:
-		return `~~${inline.type}~~`;
-	}
-}
-
-function parseContent(content: any): string {
-	switch (content.type) {
-	case "heading":
-		return `${"#".repeat(content.level)} ${content.text}`;
-	case "paragraph":
-		return content.inlineContent.map(parseInline).join('');
-	case "codeListing":
-		return `\`\`\`${content.syntax}\n${content.code.join('\n')}\n\`\`\``;
-	case "unorderedList":
-		return content.items.map((item: any) => "* " + item.content.map(parseContent).join('')).join('\n');
-	default:
-		return `~~${content.type}~~`;
-	}
-}
-
-function findAttributes(data: any): string[] {
-	const id = data.identifier.url + '/';
-	return data.topicSections.filter((section: any) => section.title === "Instance Properties")[0].identifiers.map((prop: string) => prop.replace(id, ''));
-}
 
 export async function activate(context: vscode.ExtensionContext) {
 	// Find all View types.
@@ -70,43 +40,49 @@ export async function activate(context: vscode.ExtensionContext) {
 		cancellable: false,
 		title: "LiveView Native",
 	}, async (progress) => {
-		console.log('withProgress');
-		await new Promise<void>((resolve, reject) => {
-			const workingDirectory = path.join(path.dirname(mixFiles[0].path), "deps", "live_view_native_swift_ui");
-			progress.report({ message: "Building BuiltinRegistryGenerator" });
-			exec(
-				`cd ${workingDirectory} && xcodebuild -scheme BuiltinRegistryGenerator -destination "platform=macOS" -derivedDataPath docc_build`,
-				(error, stdout, stderr) => {
-					console.error(error);
-					console.log(stdout);
-					console.error(stderr);
-					progress.report({ message: "Building LiveViewNative" });
-					exec(
-						`cd ${workingDirectory} && xcodebuild docbuild -scheme LiveViewNative -destination generic/platform=iOS -derivedDataPath docc_build`,
-						(error, stdout, stderr) => {
-							console.error(error);
-							console.log(stdout);
-							console.error(stderr);
-							resolve();
-						}
-					);
-				}
-			);
-		});
-		progress.report({ increment: 100 });
+		const workingDirectory = path.join(path.dirname(mixFiles[0].path), "deps", "live_view_native_swift_ui");
+
+		const cachePath = path.join(workingDirectory, "docc_build", ".lvn_vscode_cache");
+		let previousMixHash: string | undefined;
+		try {
+			previousMixHash = fs.readFileSync(cachePath, "binary");
+		} catch {
+			previousMixHash = undefined;
+		}
+		const mixContents = fs.readFileSync(mixFiles[0].path, "binary");
+		const mixHash = crypto.createHash('md5').update(mixContents).digest('hex');
+
+		if (previousMixHash === mixHash) {
+			progress.report({ message: "Using cached documentation" });
+			return;
+		}
+		
+		progress.report({ message: "Building BuiltinRegistryGenerator" });
+		await exec(`cd "${workingDirectory}" && xcodebuild -quiet -scheme BuiltinRegistryGenerator -destination "platform=macOS" -derivedDataPath docc_build`);
+
+		progress.report({ message: "Building documentation" });
+		await exec(`cd "${workingDirectory}" && xcodebuild docbuild -quiet -scheme LiveViewNative -destination generic/platform=iOS -derivedDataPath docc_build`);
+		
+		progress.report({ message: "Generating documentation extensions" });
+		try {
+			await exec(`cd "${workingDirectory}" && xcrun swift package plugin --allow-writing-to-package-directory generate-documentation-extensions`);
+		} catch {}
+
+		progress.report({ message: "Building documentation with extensions" });
+		await exec(`cd "${workingDirectory}" && xcodebuild docbuild -quiet -scheme LiveViewNative -destination generic/platform=iOS -derivedDataPath docc_build`);
+
+		fs.writeFileSync(cachePath, mixHash, "utf8");
 	});
 	
 	const selector = { language: 'phoenix-heex', pattern: '**/*.ios.heex' };
 	const hover = vscode.languages.registerHoverProvider(selector, {
 		provideHover(document, position, token) {
-
-
+			// Use HTML word boundaries.
 			const word = document.getWordRangeAtPosition(position, new RegExp("(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\$\\^\\&\\*\\(\\)\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\s]+)"));
 			if (!word) {
 				return undefined;
 			}
-			const view = document.getText(word);
-			console.log(view)
+			const wordContent = document.getText(word);
 			switch (document.getText(new vscode.Range(
 				word.start.with({ character: word.start.character - 1 }),
 				word.start
@@ -119,27 +95,23 @@ export async function activate(context: vscode.ExtensionContext) {
 				if (suffix !== '>' && suffix !== ' ') {
 					return undefined;
 				}
-				if (!views.includes(view)) {
+				if (!views.includes(wordContent)) {
 					return undefined;
 				}
-				const docData = JSON.parse(fs.readFileSync(path.join(docsPath, `${view.toLowerCase()}.json`), "binary"));
-				const content = docData.primaryContentSections.filter((section: any) => section.kind === "content")[0].content;
+				const docData = JSON.parse(fs.readFileSync(path.join(docsPath, `${wordContent.toLowerCase()}.json`), "binary"));
 				return new vscode.Hover([
-					new vscode.MarkdownString(`\`\`\`html
-<${view}>
-\`\`\``)
-				].concat(content.map((content: any) => new vscode.MarkdownString(parseContent(content)))));
+					new vscode.MarkdownString(markdown.parseAbstract(docData)),
+					new vscode.MarkdownString(markdown.parseDocumentationData(docData))
+				]);
 			case " ":
 				const attrExpr = /\s*<(\w+)\s*((\w|-)+=\"[^\"]*\"\s*)*\w*/;
 				const prefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(attrExpr);
 				if (!!prefix && prefix.length > 1) {
-					const attrData = JSON.parse(fs.readFileSync(path.join(docsPath, `${prefix[1].toLowerCase()}/${snakeToCamel(view).toLowerCase()}.json`), "binary"));
-					const content = attrData.primaryContentSections.filter((section: any) => section.kind === "content")[0].content;
+					const docData = JSON.parse(fs.readFileSync(path.join(docsPath, `${prefix[1].toLowerCase()}/${snakeToCamel(wordContent).toLowerCase()}.json`), "binary"));
 					return new vscode.Hover([
-						new vscode.MarkdownString(`\`\`\`html
-${view}
-\`\`\``)
-					].concat(content.map((content: any) => new vscode.MarkdownString(parseContent(content)))));
+						new vscode.MarkdownString(markdown.parseAbstract(docData)),
+						new vscode.MarkdownString(markdown.parseDocumentationData(docData))
+					]);
 				}
 				return undefined;
 			default:
@@ -163,9 +135,9 @@ ${view}
 			let attributeCompletions: vscode.CompletionItem[] = [];
 			if (!!prefix && prefix.length > 1 && views.includes(prefix[1])) {
 				const docData = JSON.parse(fs.readFileSync(path.join(docsPath, `${prefix[1].toLowerCase()}.json`), "binary"));
-				attributeCompletions = findAttributes(docData).map((attribute) => {
-					const completion = new vscode.CompletionItem(camelToSnake(attribute));
-					completion.insertText = new vscode.SnippetString(`${camelToSnake(attribute)}=\"$0\"`);
+				attributeCompletions = markdown.findAttributes(docData).map((attribute) => {
+					const completion = new vscode.CompletionItem(attribute);
+					completion.insertText = new vscode.SnippetString(`${attribute}=\"$0\"`);
 					completion.sortText = `_`;
 					return completion;
 				});
