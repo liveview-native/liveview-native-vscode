@@ -93,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
             switch (document.getText(new vscode.Range(
                 word.start.with({ character: word.start.character - 1 }),
                 word.start
-                ))) {
+            ))) {
                 case "<":
                     const suffix = document.getText(new vscode.Range(
                         word.end,
@@ -111,7 +111,6 @@ export async function activate(context: vscode.ExtensionContext) {
                         new vscode.MarkdownString(markdown.parseDocumentationData(docData))
                     ]);
                 case " ":
-                    console.log("attr " + wordContent);
                     const attrExpr = /\s*<(\w+)\s*((\w|-)+=\"[^\"]*\"\s*)*\w*/;
                     const prefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(attrExpr);
                     if (!!prefix && prefix.length > 1) {
