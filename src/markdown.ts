@@ -2,7 +2,7 @@ export function parseDocumentationData(data: any): string {
     return data.primaryContentSections
         .filter((section: any) => section.kind === "content")[0].content
         .map((content: any) => parseContent(data, content))
-        .join('\n');
+        .join('\n\n');
 }
 
 export function parseAbstract(data: any): string {
@@ -38,6 +38,8 @@ export function parseContent(data: any, content: any): string {
             return `\`\`\`${content.syntax}\n${content.code.join('\n')}\n\`\`\``;
         case "unorderedList":
             return content.items.map((item: any) => "* " + item.content.map((child: any) => parseContent(data, child)).join('')).join('\n');
+        case "aside":
+            return `> **${content.name}**\n` + content.content.map((child: any) => "> " + parseContent(data, child)).join('\n');
         default:
             return `~~${content.type}~~`;
     }

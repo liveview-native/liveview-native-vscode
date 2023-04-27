@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import * as util from 'util';
 import * as crypto from 'crypto';
 import { exec as execCallback } from 'child_process';
-const exec = util.promisify(execCallback);
 import * as markdown from './markdown';
 
 const snakeToCamel = (str: string): string =>
@@ -17,6 +16,14 @@ const snakeToCamel = (str: string): string =>
     );
 
 export async function activate(context: vscode.ExtensionContext) {
+    const channel = vscode.window.createOutputChannel("LiveView Native");
+    const exec = async (command: string) => {
+        const promise = util.promisify(execCallback)(command);
+        promise.child.stdout?.on('data', (data) => channel.append(data));
+        promise.child.stderr?.on('data', (data) => channel.append(data));
+        await promise;
+    };
+
     // Find all View types.
     const mixFiles = await vscode.workspace.findFiles("**/mix.exs", "**/deps/**");
     let views: string[] = [];
@@ -86,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
             switch (document.getText(new vscode.Range(
                 word.start.with({ character: word.start.character - 1 }),
                 word.start
-            ))) {
+                ))) {
                 case "<":
                     const suffix = document.getText(new vscode.Range(
                         word.end,
@@ -104,6 +111,7 @@ export async function activate(context: vscode.ExtensionContext) {
                         new vscode.MarkdownString(markdown.parseDocumentationData(docData))
                     ]);
                 case " ":
+                    console.log("attr " + wordContent);
                     const attrExpr = /\s*<(\w+)\s*((\w|-)+=\"[^\"]*\"\s*)*\w*/;
                     const prefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(attrExpr);
                     if (!!prefix && prefix.length > 1) {
