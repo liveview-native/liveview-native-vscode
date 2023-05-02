@@ -65,10 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         progress.report({ message: "Building BuiltinRegistryGenerator" });
-        await exec(`cd "${workingDirectory}" && xcodebuild -quiet -scheme BuiltinRegistryGenerator -destination "platform=macOS" -derivedDataPath docc_build`);
-
-        progress.report({ message: "Building documentation" });
-        await exec(`cd "${workingDirectory}" && xcodebuild docbuild -quiet -scheme LiveViewNative -destination generic/platform=iOS -derivedDataPath docc_build`);
+        await exec(`cd "${workingDirectory}" && xcodebuild -scheme BuiltinRegistryGenerator -destination "platform=macOS" -derivedDataPath docc_build`);
 
         progress.report({ message: "Generating documentation extensions" });
         try {
@@ -76,12 +73,12 @@ export async function activate(context: vscode.ExtensionContext) {
         } catch { }
 
         progress.report({ message: "Building documentation with extensions" });
-        await exec(`cd "${workingDirectory}" && xcodebuild docbuild -quiet -scheme LiveViewNative -destination generic/platform=iOS -derivedDataPath docc_build`);
+        await exec(`cd "${workingDirectory}" && xcodebuild docbuild -scheme LiveViewNative -destination generic/platform=iOS -derivedDataPath docc_build`);
 
         fs.writeFileSync(cachePath, mixHash, "utf8");
     });
 
-    const selector = { language: 'phoenix-heex', pattern: '**/*.ios.heex' };
+    const selector = { language: 'phoenix-heex', pattern: '**/*.swiftui.heex' };
     const hover = vscode.languages.registerHoverProvider(selector, {
         provideHover(document, position, token) {
             // Use HTML word boundaries.

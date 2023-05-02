@@ -1,0 +1,113 @@
+{
+    "injectionSelector": "L:source.elixir -comment -text -string",
+    "name": "elixir-lvn-heex",
+    "patterns": [
+      {
+        "comment": "HEEx sigil with heredoc (double quotes)",
+        "name": "text.swiftui.heex",
+        "begin": "\\s?(~Z\"\"\")$",
+        "beginCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "end": "^\\s*(\"\"\"[a-z]*)$",
+        "endCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "patterns": [
+          {
+            "include": "source.heex"
+          }
+        ]
+      },
+      {
+        "comment": "HEEx sigil with double quotes",
+        "name": "text.swiftui.heex",
+        "begin": "~Z\\\"",
+        "beginCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "end": "\\\"[a-z]*",
+        "endCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "patterns": [
+          {
+            "include": "source.heex"
+          }
+        ]
+      },
+      {
+        "comment": "HEEx sigil with square brackets",
+        "name": "text.swiftui.heex",
+        "begin": "~Z\\[",
+        "beginCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "end": "\\][a-z]*",
+        "endCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "patterns": [
+          {
+            "include": "source.heex"
+          }
+        ]
+      },
+      {
+        "comment": "HEEx sigil with parentheses",
+        "name": "text.swiftui.heex",
+        "begin": "~Z\\(",
+        "beginCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "end": "\\)[a-z]*",
+        "endCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "patterns": [
+          {
+            "include": "source.heex"
+          }
+        ]
+      },
+      {
+        "comment": "HEEx sigil with curly brackets",
+        "name": "text.swiftui.heex",
+        "begin": "~Z\\{",
+        "beginCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "end": "\\}[a-z]*",
+        "endCaptures": {
+          "0": {
+            "name": "string.quoted.double.heredoc.elixir"
+          }
+        },
+        "patterns": [
+          {
+            "include": "source.heex"
+          }
+        ]
+      }
+    ],
+    "scopeName": "source.elixir.lvn-heex"
+  }
+  

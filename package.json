@@ -10,10 +10,24 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:phoenix-heex"
+    "onLanguage:phoenix-heex",
+    "onLanguage:elixir"
   ],
   "main": "./out/extension.js",
-  "contributes": {},
+  "contributes": {
+    "grammars": [
+      {
+        "scopeName": "source.elixir.lvn-heex",
+        "path": "./syntaxes/elixir-lvn-heex.json",
+        "injectTo": [
+          "source.elixir"
+        ],
+        "embeddedLanguages": {
+          "text.swiftui.heex": "phoenix-heex"
+        }
+      }
+    ]
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
