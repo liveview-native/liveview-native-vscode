@@ -18,7 +18,7 @@ const snakeToCamel = (str: string): string =>
 export async function activate(context: vscode.ExtensionContext) {
     const channel = vscode.window.createOutputChannel("LiveView Native");
     const exec = async (command: string) => {
-        const promise = util.promisify(execCallback)(command);
+        const promise = util.promisify(execCallback)(command, { maxBuffer: undefined });
         promise.child.stdout?.on('data', (data) => channel.append(data));
         promise.child.stderr?.on('data', (data) => channel.append(data));
         await promise;
@@ -78,7 +78,10 @@ export async function activate(context: vscode.ExtensionContext) {
         fs.writeFileSync(cachePath, mixHash, "utf8");
     });
 
-    const selector = { language: 'phoenix-heex', pattern: '**/*.swiftui.heex' };
+    const selector = [
+        { language: 'phoenix-heex', pattern: '**/*.swiftui.heex' },
+        { language: 'elixir' }
+    ];
     const hover = vscode.languages.registerHoverProvider(selector, {
         provideHover(document, position, token) {
             // Use HTML word boundaries.
