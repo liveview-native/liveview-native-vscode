@@ -26,7 +26,34 @@
           "text.swiftui.heex": "phoenix-heex"
         }
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "liveviewnative.clearCache",
+        "title": "Clear Cache"
+      }
+    ],
+    "configuration": {
+      "title": "LiveView Native",
+      "properties": {
+        "liveViewNative.swiftUI.documentationSource": {
+          "type": "string",
+          "default": "hosted",
+          "enum": [
+            "hosted",
+            "local"
+          ],
+          "enumItemLabels": [
+            "Hosted",
+            "Local"
+          ],
+          "enumDescriptions": [
+            "Use documentation from the internet",
+            "Build documentation from the local `liveview-client-swiftui` declared in the `mix.exs` file"
+          ]
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -37,6 +64,7 @@
     "test": "node ./out/test/runTest.js"
   },
   "dependencies": {
+    "axios": "^1.4.0",
     "glob": "^8.1.0"
   },
   "devDependencies": {
