@@ -18,7 +18,7 @@ export function parseInline(data: any, inline: any): string {
         case "reference":
             const title = data.references[inline.identifier].title;
             try {
-                const url = new URL(inline.identifier);
+                const url = new URL(`https://liveview-native.github.io/liveview-client-swiftui${data.references[inline.identifier].url}`);
                 return `[\`${title}\`](${url.toString()})`;
             } catch {
                 return `\`${title}\``;

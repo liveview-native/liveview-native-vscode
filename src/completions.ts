@@ -13,7 +13,7 @@ const completionItemProvider: vscode.CompletionItemProvider = {
         const viewCompletions = views
             .filter((view) => view.includes(word))
             .map((view) => {
-                const completion = new vscode.CompletionItem(view);
+                const completion = new vscode.CompletionItem(view, vscode.CompletionItemKind.Struct);
                 completion.insertText = new vscode.SnippetString(`${view}>$0</${view}>`);
                 completion.sortText = `<${view}`;
                 return completion;
@@ -24,12 +24,12 @@ const completionItemProvider: vscode.CompletionItemProvider = {
         if (!!prefix && prefix.length > 1 && views.includes(prefix[1])) {
             const docData = await getDocs(`${prefix[1].toLowerCase()}.json`);
             attributeCompletions = markdown.findAttributes(docData).map((attribute) => {
-                const completion = new vscode.CompletionItem(attribute);
+                const completion = new vscode.CompletionItem(attribute, vscode.CompletionItemKind.Property);
                 completion.insertText = new vscode.SnippetString(`${attribute}=\"$0\"`);
                 completion.sortText = `_`;
                 return completion;
             });
-            const modifierAttributeCompletion = new vscode.CompletionItem("modifiers");
+            const modifierAttributeCompletion = new vscode.CompletionItem("modifiers", vscode.CompletionItemKind.Property);
             modifierAttributeCompletion.insertText = new vscode.SnippetString("modifiers={@native |> $0}");
             attributeCompletions.push(modifierAttributeCompletion);
         }
