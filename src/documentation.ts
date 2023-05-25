@@ -71,14 +71,18 @@ export const getAttributes = async () => {
     }
 };
 
+var cachedDocs: { [key: string]: string } = {};
+
 export async function getDocs(name: string): Promise<string> {
-    const mixFiles = await getMixFiles();
     switch (config.swiftUI().documentationSource) {
         case 'hosted':
-            return (await axios.get(
+            const result = cachedDocs[name] ?? (await axios.get(
                 new URL(name, "https://liveview-native.github.io/liveview-client-swiftui/data/documentation/liveviewnative/").toString()
             )).data;
+            cachedDocs[name] = result;
+            return result;
         case 'local':
+            const mixFiles = await getMixFiles();
             return JSON.parse(fs.readFileSync(
                 path.join(path.dirname(mixFiles[0].path), "deps", "live_view_native_swift_ui", "docc_build", "Build", "Products", "Debug-iphoneos", "LiveViewNative.doccarchive", "data", "documentation", "liveviewnative", name),
                 'binary'
