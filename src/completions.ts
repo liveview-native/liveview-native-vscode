@@ -19,21 +19,25 @@ LiveViewNativePlatform.context(%LiveViewNativeSwiftUi.Platform{}).platform_modif
         mod.__schema__(:fields),
         fn field -> %{
           source: mod.__schema__(:field_source, field),
-          type: Info.cast_type(mod.__schema__(:type, field))
+          type: Info.cast_type(mod.__schema__(:type, field)),
+          default: Map.get(struct(mod), field)
         } end
       ),
     }
   } end)
   |> Enum.into(%{})
-  |> Jason.encode!(pretty: true)
+  |> Jason.encode!()
   |> IO.puts
 `;
 
+type ModifierField = {
+    source: string,
+    type: string | string[],
+    default: any
+};
+
 type ModifierSchema = {
-    fields: {
-        source: string,
-        type: string | string[]
-    }[]
+    fields: ModifierField[]
 };
 
 const loadModifiers: () => { [name: string]: ModifierSchema } = () => JSON.parse(
@@ -43,9 +47,9 @@ const loadModifiers: () => { [name: string]: ModifierSchema } = () => JSON.parse
         .toString()
 );
 
-const modifierSnippet = (name: string, modifier: ModifierSchema) => {
+const modifierSnippet = (name: string, fields: ModifierField[]) => {
     let snippet = `${name}(`;
-    for (const [i, field] of modifier.fields.entries()) {
+    for (const [i, field] of fields.entries()) {
         if (i > 0) {
             snippet += ', ';
         }
@@ -97,17 +101,30 @@ const completionItemProvider: vscode.CompletionItemProvider = {
                 modifiers = undefined;
             }
         }
-        const modifierCompletions = Object.entries(modifiers ?? {}).map(([name, modifier]) => {
-            const item = new vscode.CompletionItem(
+        const modifierCompletions = Object.entries(modifiers ?? {}).reduce((prev, [name, modifier]) => {
+            const completeItem = new vscode.CompletionItem(
                 {
                     label: name,
                     detail: `(${modifier.fields.map(f => f.source).join(', ')})`
                 },
                 vscode.CompletionItemKind.Method
             );
-            item.insertText = modifierSnippet(name, modifier);
-            return item;
-        });
+            completeItem.insertText = modifierSnippet(name, modifier.fields);
+            const partialFields = modifier.fields.filter((f) => !f.default);
+            if (modifier.fields.length !== partialFields.length) {
+                const partialItem = new vscode.CompletionItem(
+                    {
+                        label: name,
+                        detail: `(${partialFields.map(f => f.source).join(', ')})`
+                    },
+                    vscode.CompletionItemKind.Method
+                );
+                partialItem.insertText = modifierSnippet(name, partialFields);
+                return [...prev, completeItem, partialItem];
+            } else {
+                return [...prev, completeItem];
+            }
+        }, new Array<vscode.CompletionItem>());
 
         return [
             ...viewCompletions,
