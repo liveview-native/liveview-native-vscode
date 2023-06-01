@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import { getDocs, getViews } from './documentation';
 import * as markdown from './markdown';
-import { loadModifiers, modifierSnippet } from './modifiers';
+import { fieldSnippet, fieldTypeName, loadModifiers, modifierSnippet } from './modifiers';
 
 const completionItemProvider: vscode.CompletionItemProvider = {
     async provideCompletionItems(document, position, token, context) {
@@ -43,7 +43,6 @@ const completionItemProvider: vscode.CompletionItemProvider = {
                     vscode.CompletionItemKind.Property
                 );
                 try {
-                    console.log(`${prefix[1].toLowerCase()}/${attribute.replace('-', '')}.json`);
                     const docData = await getDocs(`${prefix[1].toLowerCase()}/${attribute.replace('-', '')}.json`);
                     completion.documentation = new vscode.MarkdownString(
                         markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
@@ -63,7 +62,7 @@ const completionItemProvider: vscode.CompletionItemProvider = {
 
             let documentation: vscode.MarkdownString | undefined;
             try {
-                const docData = await getDocs(`${name.replace('_', '')}modifier.json`);
+                const docData = await getDocs(`${name.split('_').join('')}modifier.json`);
                 documentation = new vscode.MarkdownString(
                     markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
                 );
@@ -97,10 +96,38 @@ const completionItemProvider: vscode.CompletionItemProvider = {
             }
         }, Promise.resolve(new Array<vscode.CompletionItem>()));
 
+        const modifierExpr = /(\w+)\((\w+\s*[^)]*?,?\s*)?(\w+)?$/;
+        const modifierPrefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(modifierExpr);
+        let modifierArgumentCompletions: vscode.CompletionItem[] = [];
+        if (!!modifierPrefix && modifierPrefix.length > 1) {
+            modifierArgumentCompletions = await Promise.all(loadModifiers()[modifierPrefix[1]].fields
+                .filter((field) => field.source.includes(modifierPrefix[3] ?? ""))
+                .map(async (field) => {
+                    let documentation: vscode.MarkdownString | undefined;
+                    try {
+                        const docData = await getDocs(`${modifierPrefix[1].split('_').join('')}modifier/${field.source.split('_').join('')}.json`);
+                        documentation = new vscode.MarkdownString(
+                            markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
+                        );
+                    } catch {}
+                    const item = new vscode.CompletionItem(
+                        {
+                            label: field.source,
+                            detail: `: ${fieldTypeName(field)}`
+                        },
+                        vscode.CompletionItemKind.Field
+                    );
+                    item.insertText = new vscode.SnippetString(fieldSnippet(1, field));
+                    item.documentation = documentation;
+                    return item;
+                }));
+        }
+
         return [
             ...viewCompletions,
             ...attributeCompletions,
-            ...modifierCompletions
+            ...modifierCompletions,
+            ...modifierArgumentCompletions
         ];
     },
 };

@@ -1,6 +1,6 @@
 export function parseDocumentationData(data: any): string {
-    return data.primaryContentSections
-        .filter((section: any) => section.kind === "content")[0].content
+    return (data.primaryContentSections
+        .filter((section: any) => section.kind === "content")[0]?.content ?? [])
         .map((content: any) => parseContent(data, content))
         .join('\n\n');
 }

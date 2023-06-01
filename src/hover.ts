@@ -21,52 +21,66 @@ const hoverProvider: vscode.HoverProvider = {
             return undefined;
         }
         const wordContent = document.getText(word);
+        const prefix = document.getText(new vscode.Range(
+            word.start.with({ character: word.start.character - 1 }),
+            word.start
+        ));
+        const suffix = document.getText(new vscode.Range(
+            word.end,
+            word.end.with({ character: word.end.character + 1 })
+        ));
 
         let hovers: vscode.MarkdownString[] = [];
         
-        const modifiers = loadModifiers();
-        if (Object.keys(modifiers).includes(wordContent)) {
-            const docData = await getDocs(`${wordContent.toLowerCase().replace('_', '')}modifier.json`);
-            hovers.push(...[
-                new vscode.MarkdownString(markdown.parseAbstract(docData)),
-                new vscode.MarkdownString(markdown.parseDocumentationData(docData))
-            ]);
-        }
-
-        switch (document.getText(new vscode.Range(
-            word.start.with({ character: word.start.character - 1 }),
-            word.start
-        ))) {
-            case "<":
-                const suffix = document.getText(new vscode.Range(
-                    word.end,
-                    word.end.with({ character: word.end.character + 1 })
-                ));
-                if (suffix !== '>' && suffix !== ' ') {
-                    return undefined;
-                }
-                if (!allViews.includes(wordContent)) {
-                    return undefined;
-                }
-                const docData = await getDocs(`${wordContent.toLowerCase()}.json`);
+        try {
+            const modifiers = loadModifiers();
+            if (Object.keys(modifiers).includes(wordContent) && suffix === "(") {
+                const docData = await getDocs(`${wordContent.toLowerCase().split('_').join('')}modifier.json`);
                 hovers.push(...[
                     new vscode.MarkdownString(markdown.parseAbstract(docData)),
                     new vscode.MarkdownString(markdown.parseDocumentationData(docData))
                 ]);
-                break;
-            case " ":
-                const attrExpr = /\s*<(\w+)\s*((\w|-)+=\"[^\"]*\"\s*)*\w*/;
-                const prefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(attrExpr);
-                if (!!prefix && prefix.length > 1) {
-                    const docData = await getDocs(`${prefix[1].toLowerCase()}/${snakeToCamel(wordContent).toLowerCase()}.json`);
+            }
+
+            switch (prefix) {
+                case "<":
+                    if (suffix !== '>' && suffix !== ' ') {
+                        return undefined;
+                    }
+                    if (!allViews.includes(wordContent)) {
+                        return undefined;
+                    }
+                    const docData = await getDocs(`${wordContent.toLowerCase()}.json`);
                     hovers.push(...[
                         new vscode.MarkdownString(markdown.parseAbstract(docData)),
                         new vscode.MarkdownString(markdown.parseDocumentationData(docData))
                     ]);
-                }
-                break;
-            default:
-                break;
+                    break;
+                case " ":
+                    const attrExpr = /<(\w+).*?([\w-]+)$/;
+                    const prefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(attrExpr);
+                    if (!!prefix && prefix.length > 1) {
+                        const docData = await getDocs(`${prefix[1].toLowerCase()}/${snakeToCamel(wordContent).toLowerCase()}.json`);
+                        hovers.push(...[
+                            new vscode.MarkdownString(markdown.parseAbstract(docData)),
+                            new vscode.MarkdownString(markdown.parseDocumentationData(docData))
+                        ]);
+                    }
+                    break;
+                default:
+                    const modifierExpr = /(\w+)\((\w+\s*[^)]*?,?\s*)?(\w+)$/;
+                    const modifierPrefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(modifierExpr);
+                    if (!!modifierPrefix && modifierPrefix.length > 1) {
+                        const docData = await getDocs(`${snakeToCamel(modifierPrefix[1]).toLowerCase()}modifier/${snakeToCamel(wordContent).toLowerCase()}.json`);
+                        hovers.push(...[
+                            new vscode.MarkdownString(markdown.parseAbstract(docData)),
+                            new vscode.MarkdownString(markdown.parseDocumentationData(docData))
+                        ]);
+                    }
+                    break;
+            }
+        } catch (error) {
+            console.error(error);
         }
         return new vscode.Hover(hovers);
     },

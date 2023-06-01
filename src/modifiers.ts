@@ -56,17 +56,29 @@ export const loadModifiers: () => { [name: string]: ModifierSchema } = () => {
     }
 };
 
+export const fieldTypeName = (field: ModifierField) => {
+    if (field.type instanceof Array) {
+        return field.type.map((t) => ":" + t).join(",");
+    } else {
+        return field.type.split('.').at(-1);
+    }
+};
+
+export const fieldSnippet = (i: number, field: ModifierField) => {
+    if (field.type instanceof Array) {
+        return `${field.source}: \$\{${i + 1}|${field.type.map((t) => ":" + t).join(",")}|\}`;
+    } else {
+        return `${field.source}: \$\{${i + 1}:${field.type.split('.').at(-1)}\}`;
+    }
+};
+
 export const modifierSnippet = (name: string, fields: ModifierField[]) => {
     let snippet = `${name}(`;
     for (const [i, field] of fields.entries()) {
         if (i > 0) {
             snippet += ', ';
         }
-        if (field.type instanceof Array) {
-            snippet += `${field.source}: \$\{${i + 1}|${field.type.map((t) => ":" + t).join(",")}|\}`;
-        } else {
-            snippet += `${field.source}: \$\{${i + 1}:${field.type.split('.').at(-1)}\}`;
-        }
+        snippet += fieldSnippet(i, field);
     }
     snippet += ')';
     return new vscode.SnippetString(snippet);
