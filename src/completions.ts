@@ -68,31 +68,52 @@ const completionItemProvider: vscode.CompletionItemProvider = {
                 );
             } catch {}
 
-            const completeItem = new vscode.CompletionItem(
-                {
-                    label: name,
-                    detail: `(${modifier.fields.map(f => f.source).join(', ')})`,
-                    description: "Modifier"
-                },
-                vscode.CompletionItemKind.Method
-            );
-            completeItem.insertText = modifierSnippet(name, modifier.fields);
-            completeItem.documentation = documentation;
-            const partialFields = modifier.fields.filter((f) => !f.default);
-            if (modifier.fields.length !== partialFields.length) {
-                const partialItem = new vscode.CompletionItem(
+            if (modifier.constructors.length > 0) {
+                return [
+                    ...prev,
+                    ...modifier.constructors.map(constructor => {
+                        const completeItem = new vscode.CompletionItem(
+                            {
+                                label: name,
+                                detail: `(${constructor.map(f => f.name).join(', ')})`,
+                                description: "Modifier"
+                            },
+                            vscode.CompletionItemKind.Method
+                        );
+                        completeItem.insertText = new vscode.SnippetString(
+                            `${name}(${constructor.map((f, i) => `\$\{${i + 1}:${f.name}\}`).join(', ')})`
+                        );
+                        completeItem.documentation = documentation;
+                        return completeItem;
+                    })
+                ];
+            } else {
+                const completeItem = new vscode.CompletionItem(
                     {
                         label: name,
-                        detail: `(${partialFields.map(f => f.source).join(', ')})`,
+                        detail: `(${modifier.fields.map(f => f.source).join(', ')})`,
                         description: "Modifier"
                     },
                     vscode.CompletionItemKind.Method
                 );
-                partialItem.insertText = modifierSnippet(name, partialFields);
-                partialItem.documentation = documentation;
-                return [...prev, completeItem, partialItem];
-            } else {
-                return [...prev, completeItem];
+                completeItem.insertText = modifierSnippet(name, modifier.fields);
+                completeItem.documentation = documentation;
+                const partialFields = modifier.fields.filter((f) => !f.default);
+                if (modifier.fields.length !== partialFields.length) {
+                    const partialItem = new vscode.CompletionItem(
+                        {
+                            label: name,
+                            detail: `(${partialFields.map(f => f.source).join(', ')})`,
+                            description: "Modifier"
+                        },
+                        vscode.CompletionItemKind.Method
+                    );
+                    partialItem.insertText = modifierSnippet(name, partialFields);
+                    partialItem.documentation = documentation;
+                    return [...prev, completeItem, partialItem];
+                } else {
+                    return [...prev, completeItem];
+                }
             }
         }, Promise.resolve(new Array<vscode.CompletionItem>()));
 

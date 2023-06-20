@@ -6,6 +6,9 @@ defmodule Info do
   def cast_type({:parameterized, _, %{ :mappings => mappings }}), do: Map.keys(Enum.into(mappings, %{}))
   def cast_type({:array, type}), do: "[#{type}]"
   def cast_type(type), do: type
+
+  def cast_arguments(arguments), do: Enum.map(arguments, &Info.cast_argument/1)
+  def cast_argument({name, _, default}), do: %{ name: name, default: default }
 end
 
 LiveViewNativePlatform.context(%LiveViewNativeSwiftUi.Platform{}).platform_modifiers
@@ -20,10 +23,24 @@ LiveViewNativePlatform.context(%LiveViewNativeSwiftUi.Platform{}).platform_modif
           default: Map.get(struct(mod), field)
         } end
       ),
+      constructors: mod.__info__(:functions)
+        |> Enum.reject(fn {name, _} -> name != :params end)
+        |> Enum.map(fn {_, arity} ->
+          mod.__info__(:compile)[:source]
+            |> to_string()
+            |> File.read!()
+            |> Code.string_to_quoted!()
+            |> Macro.prewalk([], fn
+              result = {:def, _, [{:params, _, [_ | _] = arguments} | _]}, acc ->
+                if length(arguments) == arity, do: {result, Info.cast_arguments(arguments)}, else: {result, acc}
+              other, acc -> {other, acc}
+            end)
+            |> elem(1)
+        end)
     }
   } end)
   |> Enum.into(%{})
-  |> Jason.encode!()
+  |> Jason.encode!([pretty: true])
   |> IO.puts
 `;
 
@@ -33,8 +50,15 @@ type ModifierField = {
     default: any
 };
 
+type ModifierConstructorArgument = {
+    name: string,
+    default: any
+};
+type ModifierConstructor = ModifierConstructorArgument[];
+
 type ModifierSchema = {
-    fields: ModifierField[]
+    fields: ModifierField[],
+    constructors: ModifierConstructor[],
 };
 
 var modifiers: { [name: string]: ModifierSchema } | undefined;
@@ -49,6 +73,7 @@ export const loadModifiers: () => { [name: string]: ModifierSchema } = () => {
                 cwd: vscode.workspace.getWorkspaceFolder(vscode.workspace.workspaceFolders![0].uri)?.uri.path
             })
                 .toString()
+                .replace(/[^{]*/, '')
         );
         return modifiers!;
     } catch (error) {
