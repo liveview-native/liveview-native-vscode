@@ -53,7 +53,7 @@ const completionItemProvider: vscode.CompletionItemProvider = {
                 return completion;
             }));
             const modifierAttributeCompletion = new vscode.CompletionItem("modifiers", vscode.CompletionItemKind.Property);
-            modifierAttributeCompletion.insertText = new vscode.SnippetString("modifiers={@native |> $0}");
+            modifierAttributeCompletion.insertText = new vscode.SnippetString("modifiers={$0}");
             attributeCompletions.push(modifierAttributeCompletion);
         }
 
