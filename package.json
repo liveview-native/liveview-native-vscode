@@ -15,7 +15,22 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "languages": [{
+      "id": "lvn-heex",
+      "aliases": [
+        "LiveView Native HEEx"
+      ],
+      "extensions": [
+        "swiftui.heex"
+      ],
+      "configuration": "./language-configuration.json"
+    }],
     "grammars": [
+      {
+        "language": "lvn-heex",
+        "scopeName": "source.lvn-heex",
+        "path": "./syntaxes/lvn-heex.json"
+      },
       {
         "scopeName": "source.elixir.lvn-heex",
         "path": "./syntaxes/elixir-lvn-heex.json",

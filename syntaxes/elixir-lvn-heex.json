@@ -19,7 +19,7 @@
         },
         "patterns": [
           {
-            "include": "source.heex"
+            "include": "source.lvn-heex"
           }
         ]
       },
@@ -40,7 +40,7 @@
         },
         "patterns": [
           {
-            "include": "source.heex"
+            "include": "source.lvn-heex"
           }
         ]
       },
@@ -61,7 +61,7 @@
         },
         "patterns": [
           {
-            "include": "source.heex"
+            "include": "source.lvn-heex"
           }
         ]
       },
@@ -82,7 +82,7 @@
         },
         "patterns": [
           {
-            "include": "source.heex"
+            "include": "source.lvn-heex"
           }
         ]
       },
@@ -103,7 +103,7 @@
         },
         "patterns": [
           {
-            "include": "source.heex"
+            "include": "source.lvn-heex"
           }
         ]
       }
