@@ -14,6 +14,7 @@
     "onLanguage:elixir"
   ],
   "main": "./out/extension.js",
+  "repository": "https://github.com/liveview-native/liveview-native-vscode",
   "contributes": {
     "languages": [{
       "id": "lvn-heex",
