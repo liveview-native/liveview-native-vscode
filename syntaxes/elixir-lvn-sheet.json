@@ -1,0 +1,112 @@
+{
+  "injectionSelector": "L:source.elixir -comment -text -string",
+  "name": "elixir-lvn-sheet",
+  "patterns": [
+    {
+      "comment": "Sheet sigil with heredoc (double quotes)",
+      "name": "text.stylesheet.sheet",
+      "begin": "\\s?(~SHEET\"\"\")$",
+      "beginCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "end": "^\\s*(\"\"\"[a-z]*)$",
+      "endCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.swift"
+        }
+      ]
+    },
+    {
+      "comment": "Sheet sigil with double quotes",
+      "name": "text.stylesheet.sheet",
+      "begin": "~SHEET\\\"",
+      "beginCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "end": "\\\"[a-z]*",
+      "endCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.swift"
+        }
+      ]
+    },
+    {
+      "comment": "Sheet sigil with square brackets",
+      "name": "text.stylesheet.sheet",
+      "begin": "~SHEET\\[",
+      "beginCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "end": "\\][a-z]*",
+      "endCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.swift"
+        }
+      ]
+    },
+    {
+      "comment": "Sheet sigil with parentheses",
+      "name": "text.stylesheet.sheet",
+      "begin": "~SHEET\\(",
+      "beginCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "end": "\\)[a-z]*",
+      "endCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.swift"
+        }
+      ]
+    },
+    {
+      "comment": "Sheet sigil with curly brackets",
+      "name": "text.stylesheet.sheet",
+      "begin": "~SHEET\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "end": "\\}[a-z]*",
+      "endCaptures": {
+        "0": {
+          "name": "string.quoted.double.heredoc.elixir"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.swift"
+        }
+      ]
+    }
+  ],
+  "scopeName": "source.elixir.lvn-sheet"
+}
