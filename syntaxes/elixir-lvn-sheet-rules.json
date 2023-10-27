@@ -3,110 +3,149 @@
   "name": "elixir-lvn-sheet-rules",
   "patterns": [
     {
-      "comment": "Rules sigil with heredoc (double quotes)",
-      "name": "text.stylesheet.sheet-rules",
-      "begin": "\\s?(~RULES\"\"\")$",
-      "beginCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "end": "^\\s*(\"\"\"[a-z]*)$",
-      "endCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.swift"
-        }
-      ]
-    },
-    {
-      "comment": "Rules sigil with double quotes",
-      "name": "text.stylesheet.sheet-rules",
-      "begin": "~RULES\\\"",
-      "beginCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "end": "\\\"[a-z]*",
-      "endCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.swift"
-        }
-      ]
-    },
-    {
-      "comment": "Rules sigil with square brackets",
-      "name": "text.stylesheet.sheet-rules",
-      "begin": "~RULES\\[",
-      "beginCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "end": "\\][a-z]*",
-      "endCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.swift"
-        }
-      ]
-    },
-    {
-      "comment": "Rules sigil with parentheses",
-      "name": "text.stylesheet.sheet-rules",
-      "begin": "~RULES\\(",
-      "beginCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "end": "\\)[a-z]*",
-      "endCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.swift"
-        }
-      ]
-    },
-    {
-      "comment": "Rules sigil with curly brackets",
-      "name": "text.stylesheet.sheet-rules",
-      "begin": "~RULES\\{",
-      "beginCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "end": "\\}[a-z]*",
-      "endCaptures": {
-        "0": {
-          "name": "string.quoted.double.heredoc.elixir"
-        }
-      },
-      "patterns": [
-        {
-          "include": "source.swift"
-        }
-      ]
+      "include": "#text.stylesheet.sheet.rules"
     }
   ],
+  "repository": {
+    "text.stylesheet.sheet.rules": {
+      "patterns": [
+        {
+          "comment": "Rules sigil with heredoc (double quotes)",
+          "name": "text.stylesheet.sheet-rules",
+          "begin": "\\s?(~RULES\"\"\")$",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "^\\s*(\"\"\"[a-z]*)$",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#text.stylesheet.sheet.rules.comment"
+            },
+            {
+              "include": "source.swift"
+            }
+          ]
+        },
+        {
+          "comment": "Rules sigil with double quotes",
+          "name": "text.stylesheet.sheet-rules",
+          "begin": "~RULES\\\"",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "\\\"[a-z]*",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#text.stylesheet.sheet.rules.comment"
+            },
+            {
+              "include": "source.swift"
+            }
+          ]
+        },
+        {
+          "comment": "Rules sigil with square brackets",
+          "name": "text.stylesheet.sheet-rules",
+          "begin": "~RULES\\[",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "\\][a-z]*",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#text.stylesheet.sheet.rules.comment"
+            },
+            {
+              "include": "source.swift"
+            }
+          ]
+        },
+        {
+          "comment": "Rules sigil with parentheses",
+          "name": "text.stylesheet.sheet-rules",
+          "begin": "~RULES\\(",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "\\)[a-z]*",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#text.stylesheet.sheet.rules.comment"
+            },
+            {
+              "include": "source.swift"
+            }
+          ]
+        },
+        {
+          "comment": "Rules sigil with curly brackets",
+          "name": "text.stylesheet.sheet-rules",
+          "begin": "~RULES\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "\\}[a-z]*",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#text.stylesheet.sheet.rules.comment"
+            },
+            {
+              "include": "source.swift"
+            }
+          ]
+        }
+      ]
+    },
+    "text.stylesheet.sheet.rules.comment": {
+      "begin": "#",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.comment.elixir"
+        }
+      },
+      "end": "$\\n?",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.comment.elixir"
+        }
+      },
+      "name": "comment.line.number-sign.elixir"
+    }
+  },
   "scopeName": "source.elixir.lvn-sheet-rules"
 }
