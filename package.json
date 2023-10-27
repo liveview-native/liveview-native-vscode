@@ -41,6 +41,26 @@
         "embeddedLanguages": {
           "text.swiftui.heex": "phoenix-heex"
         }
+      },
+      {
+        "scopeName": "source.elixir.lvn-sheet",
+        "path": "./syntaxes/elixir-lvn-sheet.json",
+        "injectTo": [
+          "source.elixir"
+        ],
+        "embeddedLanguages": {
+          "text.stylesheet.sheet": "elixir"
+        }
+      },
+      {
+        "scopeName": "source.elixir.lvn-sheet-rules",
+        "path": "./syntaxes/elixir-lvn-sheet-rules.json",
+        "injectTo": [
+          "source.elixir"
+        ],
+        "embeddedLanguages": {
+          "text.stylesheet.sheet-rules": "elixir"
+        }
       }
     ],
     "commands": [

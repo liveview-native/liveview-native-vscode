@@ -1,0 +1,156 @@
+{
+  "injectionSelector": "L:source.elixir -comment -text -string",
+  "name": "elixir-lvn-sheet",
+  "patterns": [
+    {
+      "include": "#text.stylesheet.sheet"
+    }
+  ],
+  "repository": {
+    "block-contents": {
+      "name": "text.stylesheet.sheet.block.contents",
+      "begin": "\\s+(do)$",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.control.elixir"
+        }
+      },
+      "end": "^\\s*(end)$",
+      "endCaptures": {
+        "0": {
+          "name": "keyword.control.elixir"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.swift"
+        }
+      ]
+    },
+    "text.stylesheet.sheet": {
+      "patterns": [
+        {
+          "name": "text.stylesheet.sheet",
+          "comment": "Sheet sigil with heredoc (double quotes)",
+          "begin": "\\s?(~SHEET\"\"\")$",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "^\\s*(\"\"\"[a-z]*)$",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#block-contents"
+            },
+            {
+              "include": "source.elixir"
+            }
+          ]
+        },
+        {
+          "name": "text.stylesheet.sheet",
+          "comment": "Sheet sigil with double quotes",
+          "begin": "~SHEET\\\"",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "\\\"[a-z]*",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#block-contents"
+            },
+            {
+              "include": "source.elixir"
+            }
+          ]
+        },
+        {
+          "name": "text.stylesheet.sheet",
+          "comment": "Sheet sigil with square brackets",
+          "begin": "~SHEET\\[",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "\\][a-z]*",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#block-contents"
+            },
+            {
+              "include": "source.elixir"
+            }
+          ]
+        },
+        {
+          "name": "text.stylesheet.sheet",
+          "comment": "Sheet sigil with parentheses",
+          "begin": "~SHEET\\(",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "\\)[a-z]*",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#block-contents"
+            },
+            {
+              "include": "source.elixir"
+            }
+          ]
+        },
+        {
+          "name": "text.stylesheet.sheet",
+          "comment": "Sheet sigil with curly brackets",
+          "begin": "~SHEET\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "end": "\\}[a-z]*",
+          "endCaptures": {
+            "0": {
+              "name": "string.quoted.double.heredoc.elixir"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#block-contents"
+            },
+            {
+              "include": "source.elixir"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scopeName": "source.elixir.lvn-sheet"
+}
