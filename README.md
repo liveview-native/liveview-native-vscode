@@ -7,3 +7,11 @@ You can see the status in the bottom bar of VS Code.
 
 Once this is complete, hovering over any element in an `*.ios.heex` file will display the documentation.
 This will also enable autocomplete for elements and context-specific attributes.
+
+## Installation
+
+While this extension is pending release to the VSCode Store you will have to install it manually.
+
+1. Clone or download this project: `git clone https://github.com/liveview-native/liveview-native-vscode.git`
+2. Copy the project directory to `~/.vscode/extensions/`, or `C:\Users\USER_NAME\.vscode\extensions` (on Windows)
+3. Restart VSCode
