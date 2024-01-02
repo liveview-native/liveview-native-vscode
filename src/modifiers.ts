@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as modifierData from '../data/swiftui-modifiers.json';
+import * as modifierData from './data/swiftui-modifiers.json';
 
 type ModifierParameter = {
     firstName: string;
