@@ -66,17 +66,17 @@ export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
 
 export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
     async provideCompletionItems(document, position, token, context) {
+        const staticSnippets = [
+            new vscode.SnippetString(
+                `\"\$\{1:class-name\}\" do
+\t\$\{2:modifiers\}
+end`
+            ),
+        ];
+
         const word = document.getText(document.getWordRangeAtPosition(position));
         const modifierCompletions = await Object.entries(modifiers).filter(([name, _]) => name.startsWith(word)).reduce(async (prevPromise, [name, modifier]) => {
             const prev = await prevPromise;
-
-            let documentation: vscode.MarkdownString | undefined;
-            try {
-                const docData = await getDocs(`${name.split('_').join('')}modifier.json`);
-                documentation = new vscode.MarkdownString(
-                    markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
-                );
-            } catch {}
 
             if (modifier.length > 0) {
                 return [
@@ -91,7 +91,6 @@ export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
                             vscode.CompletionItemKind.Method
                         );
                         completeItem.insertText = modifierSnippet(name, signature);
-                        completeItem.documentation = documentation;
                         return completeItem;
                     })
                 ];
@@ -108,7 +107,6 @@ export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
                 .map((signature) => signature
                     .filter((parameter) => (parameter.secondName?.includes(modifierPrefix[3] ?? "") || parameter.firstName.includes(modifierPrefix[3] ?? "")))
                     .map(async (parameter) => {
-                        let documentation: vscode.MarkdownString | undefined;
                         const item = new vscode.CompletionItem(
                             {
                                 label: parameter.firstName === "_" ? parameter.secondName ?? parameter.firstName : parameter.firstName,
@@ -117,7 +115,6 @@ export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
                             vscode.CompletionItemKind.Field
                         );
                         item.insertText = new vscode.SnippetString(parameterSnippet(1, parameter));
-                        item.documentation = documentation;
                         return item;
                     })
                 )
@@ -126,6 +123,11 @@ export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
         }
 
         return [
+            ...(staticSnippets.map((snippet) => {
+                const item = new vscode.CompletionItem("LiveView Native Class", vscode.CompletionItemKind.Snippet);
+                item.insertText = snippet;
+                return item;
+            })),
             ...modifierCompletions,
             ...modifierArgumentCompletions
         ];
