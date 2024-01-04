@@ -10,8 +10,11 @@ This will also enable autocomplete for elements and context-specific attributes.
 
 ## Installation
 
-While this extension is pending release to the VSCode Store you will have to install it manually.
+While this extension is pending release to the Visual Studio Marketplace you will have to install it manually.
 
-1. Clone or download this project: `git clone https://github.com/liveview-native/liveview-native-vscode.git`
-2. Copy the project directory to `~/.vscode/extensions/`, or `C:\Users\USER_NAME\.vscode\extensions` (on Windows)
-3. Restart VSCode
+1. Download the [latest VSIX package](https://github.com/liveview-native/liveview-native-vscode/releases)
+2. In Visual Studio Code, select *Extensions* (<kbd>⇧</kbd><kbd>⌘</kbd><kbd>X</kbd>) → *More Actions...* (`⋯`) → *Install from VSIX...*
+![Screenshot of the `Install from VSIX...` menu item](docs/install-vsix.png)
+3. Choose the downloaded `.vsix` file
+    * Alternatively, you can drag and drop the `.vsix` file onto the *Extensions* panel
+4. When prompted, reload the window
