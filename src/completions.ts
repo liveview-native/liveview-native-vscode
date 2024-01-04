@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 
 import { getDocs, getViews } from './documentation';
 import * as markdown from './markdown';
-import { fieldSnippet, fieldTypeName, loadModifiers, modifierSnippet } from './modifiers';
+import { modifiers, modifierSnippet, parameterSnippet } from './modifiers';
 
-const completionItemProvider: vscode.CompletionItemProvider = {
+export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
     async provideCompletionItems(document, position, token, context) {
         const views = await getViews();
         const word = document.getText(document.getWordRangeAtPosition(position));
@@ -57,63 +57,45 @@ const completionItemProvider: vscode.CompletionItemProvider = {
             attributeCompletions.push(modifierAttributeCompletion);
         }
 
-        const modifierCompletions = await Object.entries(loadModifiers()).filter(([name, _]) => name.startsWith(word)).reduce(async (prevPromise, [name, modifier]) => {
+        return [
+            ...viewCompletions,
+            ...attributeCompletions
+        ];
+    },
+};
+
+export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
+    async provideCompletionItems(document, position, token, context) {
+        const staticSnippets = [
+            new vscode.SnippetString(
+                `\"\$\{1:class-name\}\" do
+\t\$\{2:modifiers\}
+end`
+            ),
+        ];
+
+        const word = document.getText(document.getWordRangeAtPosition(position));
+        const modifierCompletions = await Object.entries(modifiers).filter(([name, _]) => name.startsWith(word)).reduce(async (prevPromise, [name, modifier]) => {
             const prev = await prevPromise;
 
-            let documentation: vscode.MarkdownString | undefined;
-            try {
-                const docData = await getDocs(`${name.split('_').join('')}modifier.json`);
-                documentation = new vscode.MarkdownString(
-                    markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
-                );
-            } catch {}
-
-            if (modifier.constructors.length > 0) {
+            if (modifier.length > 0) {
                 return [
                     ...prev,
-                    ...modifier.constructors.map(constructor => {
+                    ...modifier.map(signature => {
                         const completeItem = new vscode.CompletionItem(
                             {
                                 label: name,
-                                detail: `(${constructor.map(f => f.name).join(', ')})`,
+                                detail: `(${signature.map(parameter => parameter.firstName).join(', ')})`,
                                 description: "Modifier"
                             },
                             vscode.CompletionItemKind.Method
                         );
-                        completeItem.insertText = new vscode.SnippetString(
-                            `${name}(${constructor.map((f, i) => `\$\{${i + 1}:${f.name}\}`).join(', ')})`
-                        );
-                        completeItem.documentation = documentation;
+                        completeItem.insertText = modifierSnippet(name, signature);
                         return completeItem;
                     })
                 ];
             } else {
-                const completeItem = new vscode.CompletionItem(
-                    {
-                        label: name,
-                        detail: `(${modifier.fields.map(f => f.source).join(', ')})`,
-                        description: "Modifier"
-                    },
-                    vscode.CompletionItemKind.Method
-                );
-                completeItem.insertText = modifierSnippet(name, modifier.fields);
-                completeItem.documentation = documentation;
-                const partialFields = modifier.fields.filter((f) => !f.default);
-                if (modifier.fields.length !== partialFields.length) {
-                    const partialItem = new vscode.CompletionItem(
-                        {
-                            label: name,
-                            detail: `(${partialFields.map(f => f.source).join(', ')})`,
-                            description: "Modifier"
-                        },
-                        vscode.CompletionItemKind.Method
-                    );
-                    partialItem.insertText = modifierSnippet(name, partialFields);
-                    partialItem.documentation = documentation;
-                    return [...prev, completeItem, partialItem];
-                } else {
-                    return [...prev, completeItem];
-                }
+                return [];
             }
         }, Promise.resolve(new Array<vscode.CompletionItem>()));
 
@@ -121,36 +103,33 @@ const completionItemProvider: vscode.CompletionItemProvider = {
         const modifierPrefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(modifierExpr);
         let modifierArgumentCompletions: vscode.CompletionItem[] = [];
         if (!!modifierPrefix && modifierPrefix.length > 1) {
-            modifierArgumentCompletions = await Promise.all(loadModifiers()[modifierPrefix[1]].fields
-                .filter((field) => field.source.includes(modifierPrefix[3] ?? ""))
-                .map(async (field) => {
-                    let documentation: vscode.MarkdownString | undefined;
-                    try {
-                        const docData = await getDocs(`${modifierPrefix[1].split('_').join('')}modifier/${field.source.split('_').join('')}.json`);
-                        documentation = new vscode.MarkdownString(
-                            markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
+            modifierArgumentCompletions = await Promise.all(modifiers[modifierPrefix[1]]
+                .map((signature) => signature
+                    .filter((parameter) => (parameter.secondName?.includes(modifierPrefix[3] ?? "") || parameter.firstName.includes(modifierPrefix[3] ?? "")))
+                    .map(async (parameter) => {
+                        const item = new vscode.CompletionItem(
+                            {
+                                label: parameter.firstName === "_" ? parameter.secondName ?? parameter.firstName : parameter.firstName,
+                                detail: `: ${parameter.type}`
+                            },
+                            vscode.CompletionItemKind.Field
                         );
-                    } catch {}
-                    const item = new vscode.CompletionItem(
-                        {
-                            label: field.source,
-                            detail: `: ${fieldTypeName(field)}`
-                        },
-                        vscode.CompletionItemKind.Field
-                    );
-                    item.insertText = new vscode.SnippetString(fieldSnippet(1, field));
-                    item.documentation = documentation;
-                    return item;
-                }));
+                        item.insertText = new vscode.SnippetString(parameterSnippet(1, parameter));
+                        return item;
+                    })
+                )
+                .reduce((res, next) => res.concat(next))
+            );
         }
 
         return [
-            ...viewCompletions,
-            ...attributeCompletions,
+            ...(staticSnippets.map((snippet) => {
+                const item = new vscode.CompletionItem("LiveView Native Class", vscode.CompletionItemKind.Snippet);
+                item.insertText = snippet;
+                return item;
+            })),
             ...modifierCompletions,
             ...modifierArgumentCompletions
         ];
     },
 };
-
-export default completionItemProvider;

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import * as markdown from './markdown';
 import { getDocs, getViews } from './documentation';
-import { loadModifiers } from './modifiers';
+import { modifiers } from './modifiers';
 
 const snakeToCamel = (str: string): string =>
     str.toLowerCase().replace(/([-_][a-z])/g, group =>
@@ -33,7 +33,6 @@ const hoverProvider: vscode.HoverProvider = {
         let hovers: vscode.MarkdownString[] = [];
         
         try {
-            const modifiers = loadModifiers();
             if (Object.keys(modifiers).includes(wordContent) && suffix === "(") {
                 const docData = await getDocs(`${wordContent.toLowerCase().split('_').join('')}modifier.json`);
                 hovers.push(...[
