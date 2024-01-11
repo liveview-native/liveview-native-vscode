@@ -1,10 +1,10 @@
 {
     "injectionSelector": "L:source.elixir -comment -text -string",
-    "name": "elixir-lvn-heex",
+    "name": "elixir-neex",
     "patterns": [
       {
         "comment": "HEEx sigil with heredoc (double quotes)",
-        "name": "text.swiftui.heex",
+        "name": "text.swiftui.neex",
         "begin": "\\s?(~SWIFTUI\"\"\")$",
         "beginCaptures": {
           "0": {
@@ -19,13 +19,13 @@
         },
         "patterns": [
           {
-            "include": "source.lvn-heex"
+            "include": "source.neex"
           }
         ]
       },
       {
         "comment": "HEEx sigil with double quotes",
-        "name": "text.swiftui.heex",
+        "name": "text.swiftui.neex",
         "begin": "~SWIFTUI\\\"",
         "beginCaptures": {
           "0": {
@@ -40,13 +40,13 @@
         },
         "patterns": [
           {
-            "include": "source.lvn-heex"
+            "include": "source.neex"
           }
         ]
       },
       {
         "comment": "HEEx sigil with square brackets",
-        "name": "text.swiftui.heex",
+        "name": "text.swiftui.neex",
         "begin": "~SWIFTUI\\[",
         "beginCaptures": {
           "0": {
@@ -61,13 +61,13 @@
         },
         "patterns": [
           {
-            "include": "source.lvn-heex"
+            "include": "source.neex"
           }
         ]
       },
       {
         "comment": "HEEx sigil with parentheses",
-        "name": "text.swiftui.heex",
+        "name": "text.swiftui.neex",
         "begin": "~SWIFTUI\\(",
         "beginCaptures": {
           "0": {
@@ -82,13 +82,13 @@
         },
         "patterns": [
           {
-            "include": "source.lvn-heex"
+            "include": "source.neex"
           }
         ]
       },
       {
         "comment": "HEEx sigil with curly brackets",
-        "name": "text.swiftui.heex",
+        "name": "text.swiftui.neex",
         "begin": "~SWIFTUI\\{",
         "beginCaptures": {
           "0": {
@@ -103,11 +103,11 @@
         },
         "patterns": [
           {
-            "include": "source.lvn-heex"
+            "include": "source.neex"
           }
         ]
       }
     ],
-    "scopeName": "source.elixir.lvn-heex"
+    "scopeName": "source.elixir.neex"
   }
   

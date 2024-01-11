@@ -12,36 +12,36 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:phoenix-heex",
+    "onLanguage:neex",
     "onLanguage:elixir"
   ],
   "main": "./out/extension.js",
   "repository": "https://github.com/liveview-native/liveview-native-vscode",
   "contributes": {
     "languages": [{
-      "id": "lvn-heex",
+      "id": "neex",
       "aliases": [
-        "LiveView Native HEEx"
+        "LiveView Native EEx"
       ],
       "extensions": [
-        "swiftui.heex"
+        "swiftui.neex"
       ],
       "configuration": "./language-configuration.json"
     }],
     "grammars": [
       {
-        "language": "lvn-heex",
-        "scopeName": "source.lvn-heex",
-        "path": "./syntaxes/lvn-heex.json"
+        "language": "neex",
+        "scopeName": "source.neex",
+        "path": "./syntaxes/neex.json"
       },
       {
-        "scopeName": "source.elixir.lvn-heex",
-        "path": "./syntaxes/elixir-lvn-heex.json",
+        "scopeName": "source.elixir.neex",
+        "path": "./syntaxes/elixir-neex.json",
         "injectTo": [
           "source.elixir"
         ],
         "embeddedLanguages": {
-          "text.swiftui.heex": "phoenix-heex"
+          "text.swiftui.neex": "phoenix-heex"
         }
       },
       {

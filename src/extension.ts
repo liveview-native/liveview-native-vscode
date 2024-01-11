@@ -6,8 +6,8 @@ import hoverProvider from './hover';
 import { markupCompletionItemProvider, stylesheetCompletionItemProvider } from './completions';
 import * as config from './config';
 
-const heexSelector = [
-    { language: 'phoenix-heex', pattern: '**/*.swiftui.heex' },
+const neexSelector = [
+    { language: 'neex', pattern: '**/*.swiftui.neex' },
     { language: 'elixir' }
 ];
 
@@ -22,8 +22,8 @@ export async function activate(context: vscode.ExtensionContext) {
         await loadLocalDocumentation();
     }
 
-    const heexHover = vscode.languages.registerHoverProvider(heexSelector, hoverProvider);
-    const heexCompletions = vscode.languages.registerCompletionItemProvider(heexSelector, markupCompletionItemProvider);
+    const neexHover = vscode.languages.registerHoverProvider(neexSelector, hoverProvider);
+    const neexCompletions = vscode.languages.registerCompletionItemProvider(neexSelector, markupCompletionItemProvider);
 
     const sheetCompletions = vscode.languages.registerCompletionItemProvider(sheetSelector, stylesheetCompletionItemProvider);
 
@@ -31,7 +31,7 @@ export async function activate(context: vscode.ExtensionContext) {
         context.workspaceState.update("hosted_view_list", undefined);
     });
 
-    context.subscriptions.push(heexHover, heexCompletions, sheetCompletions, clearCache);
+    context.subscriptions.push(neexHover, neexCompletions, sheetCompletions, clearCache);
 }
 
 export function deactivate() { }
