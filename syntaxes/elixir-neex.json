@@ -5,7 +5,7 @@
       {
         "comment": "HEEx sigil with heredoc (double quotes)",
         "name": "text.swiftui.neex",
-        "begin": "\\s?(~LVN\"\"\")$",
+        "begin": "\\s?(~(LVN|SWIFTUI)\"\"\")$",
         "beginCaptures": {
           "0": {
             "name": "string.quoted.double.heredoc.elixir"
@@ -26,7 +26,7 @@
       {
         "comment": "HEEx sigil with double quotes",
         "name": "text.swiftui.neex",
-        "begin": "~LVN\\\"",
+        "begin": "~(LVN|SWIFTUI)\\\"",
         "beginCaptures": {
           "0": {
             "name": "string.quoted.double.heredoc.elixir"
@@ -47,7 +47,7 @@
       {
         "comment": "HEEx sigil with square brackets",
         "name": "text.swiftui.neex",
-        "begin": "~LVN\\[",
+        "begin": "~(LVN|SWIFTUI)\\[",
         "beginCaptures": {
           "0": {
             "name": "string.quoted.double.heredoc.elixir"
@@ -68,7 +68,7 @@
       {
         "comment": "HEEx sigil with parentheses",
         "name": "text.swiftui.neex",
-        "begin": "~LVN\\(",
+        "begin": "~(LVN|SWIFTUI)\\(",
         "beginCaptures": {
           "0": {
             "name": "string.quoted.double.heredoc.elixir"
@@ -89,7 +89,7 @@
       {
         "comment": "HEEx sigil with curly brackets",
         "name": "text.swiftui.neex",
-        "begin": "~LVN\\{",
+        "begin": "~(LVN|SWIFTUI)\\{",
         "beginCaptures": {
           "0": {
             "name": "string.quoted.double.heredoc.elixir"
