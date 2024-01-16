@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { getDocs, getViews } from './documentation';
+import { getDocs, getViews, getAppleDocs, appleDocsURL } from './documentation';
 import * as markdown from './markdown';
 import { modifiers, modifierSnippet, parameterSnippet } from './modifiers';
 
@@ -81,7 +81,7 @@ end`
             if (modifier.length > 0) {
                 return [
                     ...prev,
-                    ...modifier.map(signature => {
+                    ...(await Promise.all(modifier.map(async signature => {
                         const completeItem = new vscode.CompletionItem(
                             {
                                 label: name,
@@ -90,9 +90,15 @@ end`
                             },
                             vscode.CompletionItemKind.Method
                         );
+                        try {
+                            const docData = await getAppleDocs(`view/${name}(${signature.map(parameter => (parameter.firstName + ':')).join('')}).json`);
+                            completeItem.documentation = new vscode.MarkdownString(
+                                markdown.parseAbstract(docData, appleDocsURL) + "\n\n" + markdown.parseDocumentationData(docData, appleDocsURL)
+                            );
+                        } catch {}
                         completeItem.insertText = modifierSnippet(name, signature);
                         return completeItem;
-                    })
+                    })))
                 ];
             } else {
                 return [];

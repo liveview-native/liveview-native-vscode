@@ -90,6 +90,16 @@ export async function getDocs(name: string): Promise<string> {
     }
 };
 
+/// Fetch latest documentation from `developer.apple.com`.
+export const appleDocsURL = "https://developer.apple.com/tutorials/data/documentation/swiftui/";
+export async function getAppleDocs(name: string): Promise<string> {
+    const result = cachedDocs[name] ?? (await axios.get(
+        new URL(name, appleDocsURL).toString()
+    )).data;
+    cachedDocs[name] = result;
+    return result;
+}
+
 export const loadLocalDocumentation = async () => {
     const mixFiles = await getMixFiles();
     vscode.window.withProgress({
