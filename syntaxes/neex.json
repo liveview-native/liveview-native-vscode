@@ -1,8 +1,8 @@
 {
-    "name": "lvn-heex",
-    "scopeName": "source.lvn-heex",
+    "name": "neex",
+    "scopeName": "source.neex",
     "fileTypes": [
-      "swiftui.heex"
+      "swiftui.neex"
     ],
     "patterns": [
       {
