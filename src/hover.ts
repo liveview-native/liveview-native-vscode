@@ -34,7 +34,7 @@ const hoverProvider: vscode.HoverProvider = {
         
         try {
             if (Object.keys(modifiers).includes(wordContent) && suffix === "(") {
-                for (const signature of modifiers[wordContent]) {
+                for (const signature of modifiers.modifiers[wordContent]) {
                     const docData = await getAppleDocs(`view/${wordContent}(${signature.map(parameter => (parameter.firstName + ':')).join('')}).json`);
                     hovers.push(...[
                         new vscode.MarkdownString(`\`\`\`swift\n${wordContent}(${signature.map((parameter) =>

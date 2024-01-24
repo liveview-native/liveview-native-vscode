@@ -75,7 +75,7 @@ end`
         ];
 
         const word = document.getText(document.getWordRangeAtPosition(position));
-        const modifierCompletions = await Object.entries(modifiers).filter(([name, _]) => name.startsWith(word)).reduce(async (prevPromise, [name, modifier]) => {
+        const modifierCompletions = await Object.entries(modifiers.modifiers).filter(([name, _]) => name.toLowerCase().startsWith(word.toLowerCase())).reduce(async (prevPromise, [name, modifier]) => {
             const prev = await prevPromise;
 
             if (modifier.length > 0) {
@@ -109,7 +109,7 @@ end`
         const modifierPrefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(modifierExpr);
         let modifierArgumentCompletions: vscode.CompletionItem[] = [];
         if (!!modifierPrefix && modifierPrefix.length > 1) {
-            modifierArgumentCompletions = await Promise.all(modifiers[modifierPrefix[1]]
+            modifierArgumentCompletions = await Promise.all(modifiers.modifiers[modifierPrefix[1]]
                 .map((signature) => signature
                     .filter((parameter) => (parameter.secondName?.includes(modifierPrefix[3] ?? "") || parameter.firstName.includes(modifierPrefix[3] ?? "")))
                     .map(async (parameter) => {
