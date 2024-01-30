@@ -91,6 +91,12 @@ const typeCompletion = (name: string, type: string, index: number) => {
                 `.linearGradient(colors: [.blue, .green], startPoint: .leading, endPoint: .trailing)`,
                 `.radialGradient(colors: [.blue, .green], center: .center, startRadius: 0, endRadius: 10)`,
                 `.image(Image("name"))`,
+                `.ultraThinMaterial`,
+                `.thinMaterial`,
+                `.regularMaterial`,
+                `.thickMaterial`,
+                `.ultraThickMaterial`,
+                `.bar`,
             ].map(c => c.split(',').join('\\,').split('|').join('\\|')));
             return `\$\{${index}|${cases.join(',')}|\}`;
     }
