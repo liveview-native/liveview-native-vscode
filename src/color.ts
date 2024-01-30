@@ -25,17 +25,17 @@ const systemColors: { [key: string]: [number, number, number] } = {
 
 export const stylesheetColorProvider: vscode.DocumentColorProvider = {
     provideColorPresentations(color, context, token) {
-        const opacity = color.alpha !== 1 ? `, opacity: ${color.alpha}` : "";
+        const opacity = color.alpha !== 1 ? `, opacity: ${color.alpha.toFixed(3)}` : "";
         if (color.red === color.green && color.red === color.blue) { // if all components are the same, use the `white` initializer.
             return [
                 new vscode.ColorPresentation(
-                    `Color(.sRGB, white: ${color.red}${opacity})`
+                    `Color(.sRGB, white: ${color.red.toFixed(3)}${opacity})`
                 )
             ];
         } else {
             return [
                 new vscode.ColorPresentation(
-                    `Color(.sRGB, red: ${color.red}, green: ${color.green}, blue: ${color.blue}${opacity})`
+                    `Color(.sRGB, red: ${color.red.toFixed(3)}, green: ${color.green.toFixed(3)}, blue: ${color.blue.toFixed(3)}${opacity})`
                 )
             ];
         }
