@@ -3,8 +3,8 @@
   "displayName": "LiveView Native",
   "description": "",
   "icon": "icon.png",
-  "publisher": "DockYard, Inc.",
-  "version": "0.2.0",
+  "publisher": "DockYard",
+  "version": "0.3.0",
   "engines": {
     "vscode": "^1.77.0"
   },
