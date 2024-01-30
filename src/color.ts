@@ -72,4 +72,4 @@ export const stylesheetColorProvider: vscode.DocumentColorProvider = {
 
         return [...rgbColors, ...whiteColors, ...hsbColors, ...namedColors];
     },
-}
+};
