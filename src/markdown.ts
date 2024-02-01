@@ -6,7 +6,11 @@ export function parseDocumentationData(data: any, baseURL: string = "https://liv
 }
 
 export function parseAbstract(data: any, baseURL: string = "https://liveview-native.github.io/liveview-client-swiftui"): string {
-    return data.abstract.map((line: any) => parseInline(data, line, baseURL)).join('\n');
+    if (data.abstract) {
+        return data.abstract.map((line: any) => parseInline(data, line, baseURL)).join('\n');
+    } else {
+        return "";
+    }
 }
 
 export function parseInline(data: any, inline: any, baseURL: string = "https://liveview-native.github.io/liveview-client-swiftui"): string {
@@ -37,7 +41,7 @@ export function parseContent(data: any, content: any, baseURL: string = "https:/
         case "paragraph":
             return content.inlineContent.map((inline: any) => parseInline(data, inline, baseURL)).join('');
         case "codeListing":
-            return `\`\`\`${content.syntax}\n${content.code.join('\n')}\n\`\`\``;
+            return `\n\`\`\`${content.syntax}\n${content.code.join('\n')}\n\`\`\``;
         case "unorderedList":
             return content.items.map((item: any) => "* " + item.content.map((child: any) => parseContent(data, child, baseURL)).join('')).join('\n');
         case "aside":
