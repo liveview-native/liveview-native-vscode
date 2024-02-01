@@ -12,6 +12,7 @@ type StylesheetLanguageSchema = {
     modifiers: { [name: string]: ModifierSignature[] };
     enums: { [name: string]: string[] };
     types: string[];
+    deprecations: { [name: string]: string };
 };
 
 export const getStylesheetLanguageSchemas = async () => {
