@@ -4,6 +4,7 @@ import { loadLocalDocumentation } from './documentation';
 
 import hoverProvider from './hover';
 import { markupCompletionItemProvider, stylesheetCompletionItemProvider } from './completions';
+import { stylesheetDiagnosticProvider } from './diagnostics';
 import * as config from './config';
 
 const neexSelector = [
@@ -30,8 +31,11 @@ export async function activate(context: vscode.ExtensionContext) {
     const clearCache = vscode.commands.registerCommand("liveviewnative.clearCache", (args) => {
         context.workspaceState.update("hosted_view_list", undefined);
     });
+    
+    const onChangeDiagnostics = vscode.workspace.onDidChangeTextDocument((e) => stylesheetDiagnosticProvider(e.document));
+    const onOpenDiagnostics = vscode.workspace.onDidOpenTextDocument(stylesheetDiagnosticProvider);
 
-    context.subscriptions.push(neexHover, neexCompletions, sheetCompletions, clearCache);
+    context.subscriptions.push(neexHover, neexCompletions, sheetCompletions, clearCache, onChangeDiagnostics, onOpenDiagnostics);
 }
 
 export function deactivate() { }

@@ -91,10 +91,10 @@ export async function getDocs(name: string): Promise<string> {
 };
 
 /// Fetch latest documentation from `developer.apple.com`.
-export const appleDocsURL = "https://developer.apple.com/tutorials/data/documentation/swiftui/";
-export async function getAppleDocs(name: string): Promise<string> {
+export const appleDocsURL = (framework: string) => `https://developer.apple.com/tutorials/data/documentation/${framework}/`;
+export async function getAppleDocs(name: string, framework: string = "swiftui"): Promise<string> {
     const result = cachedDocs[name] ?? (await axios.get(
-        new URL(name, appleDocsURL).toString()
+        new URL(name, appleDocsURL(framework)).toString()
     )).data;
     cachedDocs[name] = result;
     return result;
