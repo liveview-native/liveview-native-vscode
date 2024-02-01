@@ -11,7 +11,7 @@ export const stylesheetDiagnosticProvider = async (document: vscode.TextDocument
                 if (key in schema.modifiers) {
                     return result;
                 }
-                const expr = new RegExp(`(${key})(\\s|^|\\(|)`, 'g');
+                const expr = new RegExp(`(${key})\\s*\\(`, 'g');
                 return result.concat(
                     [...text.matchAll(expr)].map(match => {
                         const diagnostic = new vscode.Diagnostic(
