@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as modifierData from './data/swiftui-modifiers.json';
 
 type ModifierParameter = {
     firstName: string;
@@ -7,29 +6,40 @@ type ModifierParameter = {
     type: string;
 };
 type ModifierSignature = ModifierParameter[];
-type ModifierSchema = {
+type StylesheetLanguageSchema = {
+    format: string;
+    framework: string;
     modifiers: { [name: string]: ModifierSignature[] };
     enums: { [name: string]: string[] };
     types: string[];
 };
 
-export const modifiers = modifierData as ModifierSchema;
+export const getStylesheetLanguageSchemas = async () => {
+    const schemaURIs = await vscode.workspace.findFiles("deps/*/stylesheet-language.json");
+    return await Promise.all(
+        schemaURIs.map(async (uri) => JSON.parse(
+            Buffer.from(
+                await vscode.workspace.fs.readFile(uri)
+            ).toString('utf-8')
+        ) as StylesheetLanguageSchema)
+    );
+};
 
-export const parameterSnippet = (i: number, parameter: ModifierParameter) => {
+export const parameterSnippet = (schema: StylesheetLanguageSchema, i: number, parameter: ModifierParameter) => {
     if (parameter.firstName === "_") { // unlabelled parameter
-        return typeCompletion(parameter.secondName ?? "_", parameter.type, i + 1);
+        return typeCompletion(schema, parameter.secondName ?? "_", parameter.type, i + 1);
     } else {
-        return `${parameter.firstName}: ${typeCompletion(parameter.firstName, parameter.type, i + 1)}`;
+        return `${parameter.firstName}: ${typeCompletion(schema, parameter.firstName, parameter.type, i + 1)}`;
     }
 };
 
-export const modifierSnippet = (name: string, signature: ModifierParameter[]) => {
+export const modifierSnippet = (schema: StylesheetLanguageSchema, name: string, signature: ModifierParameter[]) => {
     let snippet = `${name}(`;
     for (const [i, parameter] of signature.entries()) {
         if (i > 0) {
             snippet += ', ';
         }
-        snippet += parameterSnippet(i, parameter);
+        snippet += parameterSnippet(schema, i, parameter);
     }
     snippet += ')';
     return new vscode.SnippetString(snippet);
@@ -67,11 +77,11 @@ const primitiveCases = (type: string) => {
     }
 };
 
-const typeCompletion = (name: string, type: string, index: number) => {
+const typeCompletion = (schema: StylesheetLanguageSchema, name: string, type: string, index: number) => {
     const generic = type.match(/^(?<wrapper>\w+)<(?<inner>(\w|\.|\<|\>)+)(?<innerOptional>\??)>(?<wrapperOptional>\??)$/);
     const baseType = type.match(/^(?<type>(\w|\.|\<|\>)+)(?<optional>\??)$/);
     const baseTypeName = (generic?.groups?.inner ?? baseType?.groups?.type ?? type).split('.').at(-1)!;
-    const enumCases = modifiers.enums?.[baseTypeName]?.map(c => `.${c}`) ?? [];
+    const enumCases = schema.enums?.[baseTypeName]?.map(c => `.${c}`) ?? [];
     const typeCases = primitiveCases(baseTypeName);
     let cases = [...enumCases, ...typeCases];
     if (generic?.groups?.innerOptional === "?" || generic?.groups?.wrapperOptional === "?" || baseType?.groups?.optional === "?") {

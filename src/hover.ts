@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import * as markdown from './markdown';
 import { getDocs, getViews, getAppleDocs, appleDocsURL } from './documentation';
-import { modifiers } from './modifiers';
+import { getStylesheetLanguageSchemas } from './modifiers';
 
 const snakeToCamel = (str: string): string =>
     str.toLowerCase().replace(/([-_][a-z])/g, group =>
@@ -34,55 +34,57 @@ const hoverProvider: vscode.HoverProvider = {
         
         try {
             // hover on SwiftUI modifier
-            if (Object.keys(modifiers.modifiers).includes(wordContent) && suffix === "(") {
-                for (const signature of modifiers.modifiers[wordContent]) {
-                    const docData = await getAppleDocs(`view/${wordContent}(${signature.map(parameter => (parameter.firstName + ':')).join('')}).json`);
-                    hovers.push(...[
-                        new vscode.MarkdownString(`\`\`\`swift\n${wordContent}(${signature.map((parameter) =>
-                            parameter.firstName === "_"
-                                ? (parameter.firstName + ' ' + (parameter.secondName ?? "") + ': ' + parameter.type)
-                                : (parameter.firstName + ': ' + parameter.type)
-                        ).join(', ')})\n\`\`\``),
-                        new vscode.MarkdownString(markdown.parseAbstract(docData, appleDocsURL)),
-                        new vscode.MarkdownString(markdown.parseDocumentationData(docData, appleDocsURL))
-                    ]);
+            for (const schema of await getStylesheetLanguageSchemas()) {
+                if (Object.keys(schema.modifiers).includes(wordContent) && suffix === "(") {
+                    for (const signature of schema.modifiers[wordContent]) {
+                        const docData = await getAppleDocs(`view/${wordContent}(${signature.map(parameter => (parameter.firstName + ':')).join('')}).json`);
+                        hovers.push(...[
+                            new vscode.MarkdownString(`\`\`\`swift\n${wordContent}(${signature.map((parameter) =>
+                                parameter.firstName === "_"
+                                    ? (parameter.firstName + ' ' + (parameter.secondName ?? "") + ': ' + parameter.type)
+                                    : (parameter.firstName + ': ' + parameter.type)
+                            ).join(', ')})\n\`\`\``),
+                            new vscode.MarkdownString(markdown.parseAbstract(docData, appleDocsURL(schema.framework))),
+                            new vscode.MarkdownString(markdown.parseDocumentationData(docData, appleDocsURL(schema.framework)))
+                        ]);
+                    }
                 }
-            }
-
-            // hover on SwiftUI type
-            const allTypes = [...Object.keys(modifiers.enums), ...modifiers.types]
-                .map(key => (key.startsWith('SwiftUI.')) ? key.split('.').slice(1) : key.split('.'));
-            const hoverType = allTypes.find(t => t.at(-1) === wordContent);
-            if (hoverType && (suffix === "." || suffix === "(")) {
-                const allPaths = hoverType.at(-1)!.startsWith("Any")
-                    ? [hoverType, [...hoverType.slice(0, -1), hoverType.at(-1)!.split('Any').join('')]]
-                    : [hoverType];
-                for (const path of allPaths) {
-                    const docData = await getAppleDocs(`${path.join('/')}.json`);
-                    hovers.push(...[
-                        new vscode.MarkdownString(`\`\`\`swift\n${path.join('.')}\n\`\`\``),
-                        new vscode.MarkdownString(markdown.parseAbstract(docData, appleDocsURL)),
-                        new vscode.MarkdownString(markdown.parseDocumentationData(docData, appleDocsURL))
-                    ]);
+    
+                // hover on SwiftUI type
+                const allTypes = [...Object.keys(schema.enums), ...schema.types]
+                    .map(key => (key.startsWith('SwiftUI.')) ? key.split('.').slice(1) : key.split('.'));
+                const hoverType = allTypes.find(t => t.at(-1) === wordContent);
+                if (hoverType && (suffix === "." || suffix === "(")) {
+                    const allPaths = hoverType.at(-1)!.startsWith("Any")
+                        ? [hoverType, [...hoverType.slice(0, -1), hoverType.at(-1)!.split('Any').join('')]]
+                        : [hoverType];
+                    for (const path of allPaths) {
+                        const docData = await getAppleDocs(`${path.join('/')}.json`);
+                        hovers.push(...[
+                            new vscode.MarkdownString(`\`\`\`swift\n${path.join('.')}\n\`\`\``),
+                            new vscode.MarkdownString(markdown.parseAbstract(docData, appleDocsURL(schema.framework))),
+                            new vscode.MarkdownString(markdown.parseDocumentationData(docData, appleDocsURL(schema.framework)))
+                        ]);
+                    }
                 }
-            }
-            // hover on SwiftUI type static member
-            if (prefix === ".") {
-                for (const [key, value] of Object.entries(modifiers.enums)) {
-                    if (value.includes(wordContent)) {
-                        const basePath = (key.startsWith('SwiftUI.')) ? key.split('.').slice(1) : key.split('.');
-                        const allPaths = basePath.at(-1)!.startsWith("Any")
-                            ? [basePath, [...basePath.slice(0, -1), basePath.at(-1)!.split('Any').join('')]]
-                            : [basePath];
-                        for (const path of allPaths) {
-                            try {
-                                const docData = await getAppleDocs(`${path.join('/')}/${wordContent}.json`);
-                                hovers.push(...[
-                                    new vscode.MarkdownString(`\`\`\`swift\n${path.join('.')}.${wordContent}\n\`\`\``),
-                                    new vscode.MarkdownString(markdown.parseAbstract(docData, appleDocsURL)),
-                                    new vscode.MarkdownString(markdown.parseDocumentationData(docData, appleDocsURL))
-                                ]);
-                            } catch {}
+                // hover on SwiftUI type static member
+                if (prefix === ".") {
+                    for (const [key, value] of Object.entries(schema.enums)) {
+                        if (value.includes(wordContent)) {
+                            const basePath = (key.startsWith('SwiftUI.')) ? key.split('.').slice(1) : key.split('.');
+                            const allPaths = basePath.at(-1)!.startsWith("Any")
+                                ? [basePath, [...basePath.slice(0, -1), basePath.at(-1)!.split('Any').join('')]]
+                                : [basePath];
+                            for (const path of allPaths) {
+                                try {
+                                    const docData = await getAppleDocs(`${path.join('/')}/${wordContent}.json`);
+                                    hovers.push(...[
+                                        new vscode.MarkdownString(`\`\`\`swift\n${path.join('.')}.${wordContent}\n\`\`\``),
+                                        new vscode.MarkdownString(markdown.parseAbstract(docData, appleDocsURL(schema.framework))),
+                                        new vscode.MarkdownString(markdown.parseDocumentationData(docData, appleDocsURL(schema.framework)))
+                                    ]);
+                                } catch {}
+                            }
                         }
                     }
                 }

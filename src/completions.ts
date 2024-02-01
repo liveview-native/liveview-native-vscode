@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import { getDocs, getViews, getAppleDocs, appleDocsURL } from './documentation';
 import * as markdown from './markdown';
-import { modifiers, modifierSnippet, parameterSnippet } from './modifiers';
+import { getStylesheetLanguageSchemas, modifierSnippet, parameterSnippet } from './modifiers';
 
 export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
     async provideCompletionItems(document, position, token, context) {
@@ -65,7 +65,7 @@ export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
 };
 
 export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
-    provideCompletionItems(document, position, token, context) {
+    async provideCompletionItems(document, position, token, context) {
         const staticSnippets = [
             new vscode.SnippetString(
                 `\"\$\{1:class-name\}\" do
@@ -74,8 +74,10 @@ end`
             ),
         ];
 
+        const schemas = await getStylesheetLanguageSchemas();
+
         const word = document.getText(document.getWordRangeAtPosition(position));
-        const modifierCompletions = Object.entries(modifiers.modifiers)
+        const modifierCompletions = schemas.map((schema) => Object.entries(schema.modifiers)
             .filter(([name, _]) => name.toLowerCase().includes(word.toLowerCase()))
             .reduce((previous, [name, modifier]) => {
                 if (modifier.length > 0) {
@@ -93,37 +95,41 @@ end`
                             try {
                                 const docData = await getAppleDocs(`view/${name}(${signature.map(parameter => (parameter.firstName + ':')).join('')}).json`);
                                 completeItem.documentation = new vscode.MarkdownString(
-                                    markdown.parseAbstract(docData, appleDocsURL) + "\n\n" + markdown.parseDocumentationData(docData, appleDocsURL)
+                                    markdown.parseAbstract(docData, appleDocsURL(schema.framework)) + "\n\n" + markdown.parseDocumentationData(docData, appleDocsURL(schema.framework))
                                 );
                             } catch {}
-                            completeItem.insertText = modifierSnippet(name, signature);
+                            completeItem.insertText = modifierSnippet(schema, name, signature);
                             return completeItem;
                         })
                     ];
                 } else {
                     return [];
                 }
-            }, new Array<Promise<vscode.CompletionItem>>());
+            }, new Array<Promise<vscode.CompletionItem>>()))
+            .reduce((res, next) => res.concat(next));
 
         const modifierExpr = /(\w+)\((\w+\s*[^)]*?,?\s*)?(\w+)?$/;
         const modifierPrefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(modifierExpr);
         let modifierArgumentCompletions: Promise<vscode.CompletionItem>[] = [];
         if (!!modifierPrefix && modifierPrefix.length > 1) {
-            modifierArgumentCompletions = modifiers.modifiers[modifierPrefix[1]]
-                .map((signature) => signature
-                    .filter((parameter) => (parameter.secondName?.includes(modifierPrefix[3] ?? "") || parameter.firstName.includes(modifierPrefix[3] ?? "")))
-                    .map(async (parameter) => {
-                        const item = new vscode.CompletionItem(
-                            {
-                                label: parameter.firstName === "_" ? parameter.secondName ?? parameter.firstName : parameter.firstName,
-                                detail: `: ${parameter.type}`
-                            },
-                            vscode.CompletionItemKind.Field
-                        );
-                        item.insertText = new vscode.SnippetString(parameterSnippet(1, parameter));
-                        return item;
-                    })
-                )
+            modifierArgumentCompletions = schemas.map(
+                (schema) => schema.modifiers[modifierPrefix[1]]
+                    .map((signature) => signature
+                        .filter((parameter) => (parameter.secondName?.includes(modifierPrefix[3] ?? "") || parameter.firstName.includes(modifierPrefix[3] ?? "")))
+                        .map(async (parameter) => {
+                            const item = new vscode.CompletionItem(
+                                {
+                                    label: parameter.firstName === "_" ? parameter.secondName ?? parameter.firstName : parameter.firstName,
+                                    detail: `: ${parameter.type}`
+                                },
+                                vscode.CompletionItemKind.Field
+                            );
+                            item.insertText = new vscode.SnippetString(parameterSnippet(schema, 1, parameter));
+                            return item;
+                        })
+                    )
+                    .reduce((res, next) => res.concat(next))
+            )
                 .reduce((res, next) => res.concat(next));
         }
 
