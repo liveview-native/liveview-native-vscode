@@ -69,7 +69,8 @@
     "commands": [
       {
         "command": "liveviewnative.clearCache",
-        "title": "Clear Cache"
+        "title": "Clear Cache",
+        "category": "LiveView Native"
       }
     ],
     "configuration": {
