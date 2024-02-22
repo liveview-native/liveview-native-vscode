@@ -17,16 +17,18 @@
   "main": "./out/extension.js",
   "repository": "https://github.com/liveview-native/liveview-native-vscode",
   "contributes": {
-    "languages": [{
-      "id": "neex",
-      "aliases": [
-        "LiveView Native EEx"
-      ],
-      "extensions": [
-        "swiftui.neex"
-      ],
-      "configuration": "./language-configuration.json"
-    }],
+    "languages": [
+      {
+        "id": "neex",
+        "aliases": [
+          "LiveView Native EEx"
+        ],
+        "extensions": [
+          "swiftui.neex"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
     "grammars": [
       {
         "language": "neex",
@@ -102,7 +104,8 @@
   },
   "dependencies": {
     "axios": "^1.4.0",
-    "glob": "^8.1.0"
+    "glob": "^8.1.0",
+    "vscode-emmet-helper": "^2.6.4"
   },
   "devDependencies": {
     "@types/glob": "^8.0.1",
