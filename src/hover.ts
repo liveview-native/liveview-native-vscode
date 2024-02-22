@@ -53,7 +53,7 @@ const hoverProvider: vscode.HoverProvider = {
                     if (suffix !== '>' && suffix !== ' ') {
                         return undefined;
                     }
-                    if (!allViews.includes(wordContent)) {
+                    if (!allViews.some(v => v.tag === wordContent)) {
                         return undefined;
                     }
                     const docData = await getDocs(`${wordContent.toLowerCase()}.json`);

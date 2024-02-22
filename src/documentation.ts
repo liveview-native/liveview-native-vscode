@@ -12,6 +12,8 @@ import { exec as execCallback } from 'child_process';
 import channel from './channel';
 import * as config from './config';
 
+import * as selfClosingTags from './data/swiftui/self-closing.json';
+
 const exec = async (command: string) => {
     const promise = util.promisify(execCallback)(command, { maxBuffer: undefined });
     promise.child.stdout?.on('data', (data) => channel.append(data));
@@ -25,7 +27,7 @@ export const getViews = async () => {
     switch (config.swiftUI().documentationSource) {
         case 'hosted':
             const context: vscode.ExtensionContext | undefined = (global as any).extensionContext;
-            const cached = context?.workspaceState.get<string[]>("hosted_view_list");
+            const cached = context?.workspaceState.get<{ tag: string; selfClosing: boolean; }[]>("hosted_view_list");
             if (!!cached) {
                 return cached;
             }
@@ -40,13 +42,19 @@ export const getViews = async () => {
                     return children;
                 }
             };
-            const result = flatten(indexData[0]).map((page) => page.title.slice(1, -1));
+            const result = flatten(indexData[0]).map((page) => {
+                const tag = page.title.slice(1, -1);
+                return {
+                    tag: tag,
+                    selfClosing: selfClosingTags.includes(tag)
+                };
+            });
             context?.workspaceState.update("hosted_view_list", result);
             return result;
         case 'local':
-            let views: string[] = [];
+            let views: { tag: string, selfClosing: boolean }[] = [];
             for (const mixFile of await getMixFiles()) {
-                const viewDir = path.join(path.dirname(mixFile.path), "deps", "live_view_native_swift_ui", "Sources", "LiveViewNative", "Views");
+                const viewDir = path.join(path.dirname(mixFile.path), "deps", "live_view_native_swiftui", "Sources", "LiveViewNative", "Views");
                 const viewPaths: string[] = await new Promise((resolve, reject) => {
                     glob.glob(viewDir + "/**/*.swift", (error, matches) => {
                         if (!!error) {
@@ -56,7 +64,14 @@ export const getViews = async () => {
                         }
                     });
                 });
-                views = views.concat(viewPaths.map((v) => path.basename(v).replace('.swift', '')));
+                views = views.concat(viewPaths.map((v) => {
+                    return {
+                        tag: path.basename(v).replace('.swift', ''),
+                        selfClosing: fs.readFileSync(v)
+                            .toString()
+                            .match(/context\.buildChildren|context\.children|element\.children|element\.elementChildren/g) === null
+                    };
+                }));
             }
             return views;
     }
@@ -84,7 +99,7 @@ export async function getDocs(name: string): Promise<string> {
         case 'local':
             const mixFiles = await getMixFiles();
             return JSON.parse(fs.readFileSync(
-                path.join(path.dirname(mixFiles[0].path), "deps", "live_view_native_swift_ui", "docc_build", "Build", "Products", "Debug-iphoneos", "LiveViewNative.doccarchive", "data", "documentation", "liveviewnative", name),
+                path.join(path.dirname(mixFiles[0].path), "deps", "live_view_native_swiftui", "docc_build", "Build", "Products", "Debug-iphoneos", "LiveViewNative.doccarchive", "data", "documentation", "liveviewnative", name),
                 'binary'
             ));
     }
@@ -107,7 +122,7 @@ export const loadLocalDocumentation = async () => {
         cancellable: false,
         title: "LiveView Native",
     }, async (progress) => {
-        const workingDirectory = path.join(path.dirname(mixFiles[0].path), "deps", "live_view_native_swift_ui");
+        const workingDirectory = path.join(path.dirname(mixFiles[0].path), "deps", "live_view_native_swiftui");
 
         const cachePath = path.join(workingDirectory, "docc_build", ".lvn_vscode_cache");
         let previousMixHash: string | undefined;
