@@ -3,36 +3,40 @@ import * as vscode from 'vscode';
 import { getDocs, getViews, getAppleDocs, appleDocsURL } from './documentation';
 import * as markdown from './markdown';
 import { modifiers, modifierSnippet, parameterSnippet } from './modifiers';
+import { extractAbbreviation, expandAbbreviation, getExpandOptions } from 'vscode-emmet-helper';
 
 export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
     async provideCompletionItems(document, position, token, context) {
         const views = await getViews();
         const word = document.getText(document.getWordRangeAtPosition(position));
         const viewCompletions = await Promise.all(views
-            .filter((view) => view.includes(word))
+            .filter((view) => view.tag.includes(word))
             .map(async (view) => {
                 const completion = new vscode.CompletionItem(
                     {
-                        label: view,
+                        label: view.tag,
                         description: "View"
                     },
                     vscode.CompletionItemKind.Struct
                 );
                 try {
-                    const docData = await getDocs(`${view.toLowerCase()}.json`);
+                    const docData = await getDocs(`${view.tag.toLowerCase()}.json`);
                     completion.documentation = new vscode.MarkdownString(
                         markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
                     );
                 } catch {}
-                completion.insertText = new vscode.SnippetString(`${view}>$0</${view}>`);
-                completion.sortText = `<${view}`;
+                if (view.selfClosing) {
+                    completion.insertText = new vscode.SnippetString(`<${view.tag} />`);
+                } else {
+                    completion.insertText = new vscode.SnippetString(`<${view.tag}>$0</${view.tag}>`);
+                }
                 return completion;
             }));
         
         const attrExpr = /\s*<(\w+)\s*((\w|-)+=\"[^\"]*\"\s*)*\w*/;
         const prefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(attrExpr);
         let attributeCompletions: vscode.CompletionItem[] = [];
-        if (!!prefix && prefix.length > 1 && views.includes(prefix[1])) {
+        if (!!prefix && prefix.length > 1 && views.some(v => v.tag === prefix[1])) {
             const docData = await getDocs(`${prefix[1].toLowerCase()}.json`);
             attributeCompletions = await Promise.all(markdown.findAttributes(docData).map(async (attribute) => {
                 const completion = new vscode.CompletionItem(
@@ -57,7 +61,19 @@ export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
             attributeCompletions.push(modifierAttributeCompletion);
         }
 
+        const emmetSyntax = extractAbbreviation(document as any, position, { lookAhead: true, type: 'markup' });
+        const emmetCompletions: vscode.CompletionItem[] = [];
+        if (views.some(v => emmetSyntax?.abbreviation.includes(v.tag))) {
+            const emmetCompletion = new vscode.CompletionItem(emmetSyntax!.abbreviation, vscode.CompletionItemKind.Snippet);
+            const options = getExpandOptions('html');
+            emmetCompletion.insertText = new vscode.SnippetString(expandAbbreviation(emmetSyntax!.abbreviation, options));
+            emmetCompletion.range = emmetSyntax?.abbreviationRange as vscode.Range;
+            emmetCompletion.sortText = "_";
+            emmetCompletions.push(emmetCompletion);
+        }
+
         return [
+            ...emmetCompletions,
             ...viewCompletions,
             ...attributeCompletions
         ];
