@@ -68,7 +68,7 @@ const provider: vscode.CodeActionProvider = {
                 action.edit.insert(document.uri, new vscode.Position(line, 0), "\t");
             }
 
-            const snippet = container ? `\$\{0:${container}\}` : "$0";
+            const snippet = container ? `\$\{0:${container}\}` : "$1";
             action.edit.set(document.uri, [
                 new vscode.SnippetTextEdit(
                     new vscode.Range(endPosition, endPosition),
@@ -76,7 +76,7 @@ const provider: vscode.CodeActionProvider = {
                 ),
                 new vscode.SnippetTextEdit(
                     new vscode.Range(beforeStartPos, beforeStartPos),
-                    new vscode.SnippetString(`<${snippet}>\n\t`)
+                    new vscode.SnippetString(`<${snippet}$2>\n\t`)
                 ),
             ]);
             return action;
