@@ -51,7 +51,17 @@ const provider: vscode.CodeActionProvider = {
         }
         
         const embedInActions = containerTypes.map((container) => {
-            const action = new vscode.CodeAction(container ? `Embed in ${container}` : "Embed...", vscode.CodeActionKind.RefactorExtract);
+            const name = (() => {
+                switch (container) {
+                    case 'Group':
+                        return 'Group';
+                    case undefined:
+                        return 'Embed...';
+                    default:
+                        return `Embed in ${container}`;
+                }
+            })();
+            const action = new vscode.CodeAction(name, vscode.CodeActionKind.RefactorExtract);
             action.edit = new vscode.WorkspaceEdit();
     
             for (let line = beforeStartPos.line + 1; line <= endPosition.line; line++) {
@@ -72,8 +82,54 @@ const provider: vscode.CodeActionProvider = {
             return action;
         });
 
+        const makeConditionalAction = new vscode.CodeAction("Make Conditional", vscode.CodeActionKind.RefactorRewrite);
+        makeConditionalAction.edit = new vscode.WorkspaceEdit();
+        if (range.start.isEqual(range.end)) {
+            makeConditionalAction.edit.set(document.uri, [
+                new vscode.SnippetTextEdit(
+                    new vscode.Range(word.end, word.end),
+                    new vscode.SnippetString(" :if={$0}")
+                )
+            ]);
+        } else {
+            makeConditionalAction.edit.set(document.uri, [
+                new vscode.SnippetTextEdit(
+                    new vscode.Range(endPosition, endPosition),
+                    new vscode.SnippetString(`\n${whitespace}<% end %>`)
+                ),
+                new vscode.SnippetTextEdit(
+                    new vscode.Range(beforeStartPos, beforeStartPos),
+                    new vscode.SnippetString(`<%= if $0 do %>\n`)
+                ),
+            ]);
+        }
+
+        const repeatAction = new vscode.CodeAction("Repeat", vscode.CodeActionKind.RefactorRewrite);
+        repeatAction.edit = new vscode.WorkspaceEdit();
+        if (range.start.isEqual(range.end)) {
+            repeatAction.edit.set(document.uri, [
+                new vscode.SnippetTextEdit(
+                    new vscode.Range(word.end, word.end),
+                    new vscode.SnippetString(" :for={$1 <- $2}")
+                )
+            ]);
+        } else {
+            repeatAction.edit.set(document.uri, [
+                new vscode.SnippetTextEdit(
+                    new vscode.Range(endPosition, endPosition),
+                    new vscode.SnippetString(`\n${whitespace}<% end %>`)
+                ),
+                new vscode.SnippetTextEdit(
+                    new vscode.Range(beforeStartPos, beforeStartPos),
+                    new vscode.SnippetString(`<%= for $1 <- $2 do %>\n`)
+                ),
+            ]);
+        }
+
         return [
-            ...embedInActions
+            ...embedInActions,
+            makeConditionalAction,
+            repeatAction,
         ];
     },
 };
