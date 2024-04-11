@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import * as htmlparser2 from 'htmlparser2';
 
 const containerTypes = [
-    "VStack",
     "HStack",
+    "VStack",
     "ZStack",
+    "List",
     "Group",
     undefined
 ];
@@ -39,12 +40,20 @@ const provider: vscode.CodeActionProvider = {
         }
         
         const whitespace = document.lineAt(beforeStartPos.line).text.match(/\s*/)?.at(0) ?? "";
+
+        const endOffset = document.offsetAt(range.end);
+        let endPosition = document.positionAt(document.offsetAt(beforeStartPos) + template.firstChild!.endIndex! + 1);
+        if (document.offsetAt(endPosition) < endOffset) { // extend the range to the end of the last selected child.
+            endPosition = template.children
+                .map((child) => document.positionAt(document.offsetAt(beforeStartPos) + child.endIndex! + 1))
+                .find((pos) => document.offsetAt(pos) > endOffset)
+                ?? range.end;
+        }
         
-        return containerTypes.map((container) => {
-            const action = new vscode.CodeAction(container ? `Embed in ${container}` : "Embed in...", vscode.CodeActionKind.RefactorExtract);
+        const embedInActions = containerTypes.map((container) => {
+            const action = new vscode.CodeAction(container ? `Embed in ${container}` : "Embed...", vscode.CodeActionKind.RefactorExtract);
             action.edit = new vscode.WorkspaceEdit();
     
-            const endPosition = document.positionAt(document.offsetAt(beforeStartPos) + template.firstChild!.endIndex! + 1);
             for (let line = beforeStartPos.line + 1; line <= endPosition.line; line++) {
                 action.edit.insert(document.uri, new vscode.Position(line, 0), "\t");
             }
@@ -62,6 +71,10 @@ const provider: vscode.CodeActionProvider = {
             ]);
             return action;
         });
+
+        return [
+            ...embedInActions
+        ];
     },
 };
 
