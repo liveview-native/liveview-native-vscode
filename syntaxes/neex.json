@@ -280,7 +280,36 @@
             "include": "#interpolation"
           },
           {
+            "include": "#style-attribute"
+          },
+          {
             "include": "#attribute"
+          }
+        ]
+      },
+      "style-attribute": {
+        "begin": "(style)(=)(\"|')",
+        "beginCaptures": {
+          "1": {
+            "name": "entity.other.attribute-name.html"
+          },
+          "2": {
+            "name": "punctuation.separator.key-value.html"
+          },
+          "3": {
+            "name": "punctuation.definition.string.begin.html"
+          }
+        },
+        "end": "(\"|')",
+        "endCaptures": {
+          "0": {
+            "name": "punctuation.definition.string.end.html"
+          }
+        },
+        "name": "meta.attribute.style",
+        "patterns": [
+          {
+            "include": "source.swift"
           }
         ]
       },
