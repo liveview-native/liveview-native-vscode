@@ -33,32 +33,36 @@ export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
                 return completion;
             }));
         
-        const attrExpr = /\s*<(\w+)\s*((\w|-)+=\"[^\"]*\"\s*)*\w*/;
+        const attrExpr = /\s*<(\w+)\s*((\w|-)+=(\"[^\"]*\"|\'[^\']*\')\s*)*\w*/;
         const prefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(attrExpr);
         let attributeCompletions: vscode.CompletionItem[] = [];
         if (!!prefix && prefix.length > 1 && views.some(v => v.tag === prefix[1])) {
-            const docData = await getDocs(`${prefix[1].toLowerCase()}.json`);
-            attributeCompletions = await Promise.all(markdown.findAttributes(docData).map(async (attribute) => {
-                const completion = new vscode.CompletionItem(
-                    {
-                        label: attribute,
-                        description: "Attribute"
-                    },
-                    vscode.CompletionItemKind.Property
-                );
-                try {
-                    const docData = await getDocs(`${prefix[1].toLowerCase()}/${attribute.replace('-', '')}.json`);
-                    completion.documentation = new vscode.MarkdownString(
-                        markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
+            try {
+                const docData = await getDocs(`${prefix[1].toLowerCase()}.json`);
+                attributeCompletions = await Promise.all(markdown.findAttributes(docData).map(async (attribute) => {
+                    const completion = new vscode.CompletionItem(
+                        {
+                            label: attribute,
+                            description: "Attribute"
+                        },
+                        vscode.CompletionItemKind.Property
                     );
-                } catch {}
-                completion.insertText = new vscode.SnippetString(`${attribute}=\"$0\"`);
-                completion.sortText = `_`;
-                return completion;
-            }));
-            const modifierAttributeCompletion = new vscode.CompletionItem("modifiers", vscode.CompletionItemKind.Property);
-            modifierAttributeCompletion.insertText = new vscode.SnippetString("modifiers={$0}");
-            attributeCompletions.push(modifierAttributeCompletion);
+                    try {
+                        const docData = await getDocs(`${prefix[1].toLowerCase()}/${attribute.replace('-', '')}.json`);
+                        completion.documentation = new vscode.MarkdownString(
+                            markdown.parseAbstract(docData) + "\n\n" + markdown.parseDocumentationData(docData)
+                        );
+                    } catch {}
+                    completion.insertText = new vscode.SnippetString(`${attribute}=\"$0\"`);
+                    completion.sortText = `_`;
+                    return completion;
+                }));
+                const modifierAttributeCompletion = new vscode.CompletionItem("modifiers", vscode.CompletionItemKind.Property);
+                modifierAttributeCompletion.insertText = new vscode.SnippetString("modifiers={$0}");
+                attributeCompletions.push(modifierAttributeCompletion);
+            } catch (error) {
+                console.error(error);
+            }
         }
 
         const emmetSyntax = extractAbbreviation(document as any, position, { lookAhead: true, type: 'markup' });
@@ -75,10 +79,45 @@ export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
         return [
             ...emmetCompletions,
             ...viewCompletions,
-            ...attributeCompletions
+            ...attributeCompletions,
+            ...((prefix && prefix[0].endsWith("style")) ? await getModifierCompletions(word) : [])
         ];
     },
 };
+
+const getModifierCompletions = async (word: string) => {
+    return await Object.entries(modifiers.modifiers)
+        .filter(([name, _]) => name.toLowerCase().includes(word.toLowerCase()))
+        .reduce(async (prevPromise, [name, modifier]) => {
+            const prev = await prevPromise;
+
+            if (modifier.length > 0) {
+                return [
+                    ...prev,
+                    ...(await Promise.all(modifier.map(async signature => {
+                        const completeItem = new vscode.CompletionItem(
+                            {
+                                label: name,
+                                detail: `(${signature.map(parameter => parameter.firstName).join(', ')})`,
+                                description: "Modifier"
+                            },
+                            vscode.CompletionItemKind.Method
+                        );
+                        try {
+                            const docData = await getAppleDocs(`view/${name}(${signature.map(parameter => (parameter.firstName + ':')).join('')}).json`);
+                            completeItem.documentation = new vscode.MarkdownString(
+                                markdown.parseAbstract(docData, appleDocsURL) + "\n\n" + markdown.parseDocumentationData(docData, appleDocsURL)
+                            );
+                        } catch {}
+                        completeItem.insertText = modifierSnippet(name, signature);
+                        return completeItem;
+                    })))
+                ];
+            } else {
+                return [];
+            }
+        }, Promise.resolve(new Array<vscode.CompletionItem>()));
+}
 
 export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
     async provideCompletionItems(document, position, token, context) {
@@ -91,39 +130,7 @@ end`
         ];
 
         const word = document.getText(document.getWordRangeAtPosition(position));
-        const modifierCompletions = await Object.entries(modifiers.modifiers)
-            .filter(([name, _]) => name.toLowerCase().includes(word.toLowerCase()))
-            .reduce(async (prevPromise, [name, modifier]) => {
-                const prev = await prevPromise;
-
-                if (modifier.length > 0) {
-                    return [
-                        ...prev,
-                        ...(await Promise.all(modifier.map(async signature => {
-                            const completeItem = new vscode.CompletionItem(
-                                {
-                                    label: name,
-                                    detail: `(${signature.map(parameter => parameter.firstName).join(', ')})`,
-                                    description: "Modifier"
-                                },
-                                vscode.CompletionItemKind.Method
-                            );
-                            try {
-                                const docData = await getAppleDocs(`view/${name}(${signature.map(parameter => (parameter.firstName + ':')).join('')}).json`);
-                                completeItem.documentation = new vscode.MarkdownString(
-                                    markdown.parseAbstract(docData, appleDocsURL) + "\n\n" + markdown.parseDocumentationData(docData, appleDocsURL)
-                                );
-                            } catch {}
-                            completeItem.insertText = modifierSnippet(name, signature);
-                            return completeItem;
-                        })))
-                    ];
-                } else {
-                    return [];
-                }
-            }, Promise.resolve(new Array<vscode.CompletionItem>()));
-        
-        console.log(modifierCompletions);
+        const modifierCompletions = await getModifierCompletions(word);
 
         const modifierExpr = /(\w+)\((\w+\s*[^)]*?,?\s*)?(\w+)?$/;
         const modifierPrefix = document.getText(new vscode.Range(position.with({ character: 0 }), position)).match(modifierExpr);

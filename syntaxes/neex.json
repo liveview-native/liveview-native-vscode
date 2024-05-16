@@ -345,7 +345,27 @@
                 "name": "punctuation.definition.string.begin.html"
               }
             },
-            "end": "(~s)?\"",
+            "end": "\"",
+            "endCaptures": {
+              "0": {
+                "name": "punctuation.definition.string.end.html"
+              }
+            },
+            "name": "string.quoted.double.html",
+            "patterns": [
+              {
+                "include": "source.swift"
+              }
+            ]
+          },
+          {
+            "begin": "(~s)?'",
+            "beginCaptures": {
+              "0": {
+                "name": "punctuation.definition.string.begin.html"
+              }
+            },
+            "end": "'",
             "endCaptures": {
               "0": {
                 "name": "punctuation.definition.string.end.html"
