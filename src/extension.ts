@@ -5,6 +5,7 @@ import { loadLocalDocumentation } from './documentation';
 import hoverProvider from './hover';
 import { markupCompletionItemProvider, stylesheetCompletionItemProvider } from './completions';
 import codeActionProvider from './codeActions';
+import { stylesheetColorProvider } from './color';
 import * as config from './config';
 
 const neexSelector = [
@@ -30,11 +31,13 @@ export async function activate(context: vscode.ExtensionContext) {
     
     const codeActions = vscode.languages.registerCodeActionsProvider(neexSelector, codeActionProvider);
 
+    const colorProvider = vscode.languages.registerColorProvider(sheetSelector, stylesheetColorProvider);
+
     const clearCache = vscode.commands.registerCommand("liveviewnative.clearCache", (args) => {
         context.workspaceState.update("hosted_view_list", undefined);
     });
 
-    context.subscriptions.push(neexHover, neexCompletions, sheetCompletions, codeActions, clearCache);
+    context.subscriptions.push(neexHover, neexCompletions, sheetCompletions, colorProvider, codeActions, clearCache);
 }
 
 export function deactivate() { }
