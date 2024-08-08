@@ -280,7 +280,123 @@
             "include": "#interpolation"
           },
           {
+            "include": "#style-attribute"
+          },
+          {
             "include": "#attribute"
+          }
+        ]
+      },
+      "style-attribute": {
+        "begin": "style",
+        "beginCaptures": {
+          "0": {
+            "name": "entity.other.attribute-name.html"
+          }
+        },
+        "end": "(?=\\s*+[^=\\s])",
+        "name": "meta.attribute.style",
+        "patterns": [
+          {
+            "begin": "=",
+            "beginCaptures": {
+              "0": {
+                "name": "punctuation.separator.key-value.html"
+              }
+            },
+            "end": "(?<=[^\\s=])(?!\\s*=)|(?=/?>)",
+            "patterns": [
+              {
+                "begin": "\\{",
+                "name": "source.elixir.embedded",
+                "beginCaptures": {
+                  "0": {
+                    "name": "punctuation.section.embedded.begin.heex"
+                  }
+                },
+                "end": "\\}",
+                "endCaptures": {
+                  "0": {
+                    "name": "punctuation.section.embedded.end.heex"
+                  }
+                },
+                "patterns": [
+                  {
+                    "include": "#style-attribute-value"
+                  },
+                  {
+                    "include": "source.elixir"
+                  }
+                ]
+              },
+              {
+                "include": "#style-attribute-value"
+              }
+            ]
+          }
+        ]
+      },
+      "style-attribute-value": {
+        "patterns": [
+          {
+            "begin": "(~s)?\"",
+            "beginCaptures": {
+              "0": {
+                "name": "punctuation.definition.string.begin.html"
+              }
+            },
+            "end": "\"",
+            "endCaptures": {
+              "0": {
+                "name": "punctuation.definition.string.end.html"
+              }
+            },
+            "name": "string.quoted.double.html",
+            "patterns": [
+              {
+                "include": "source.swift"
+              }
+            ]
+          },
+          {
+            "begin": "(~s)?'",
+            "beginCaptures": {
+              "0": {
+                "name": "punctuation.definition.string.begin.html"
+              }
+            },
+            "end": "'",
+            "endCaptures": {
+              "0": {
+                "name": "punctuation.definition.string.end.html"
+              }
+            },
+            "name": "string.quoted.double.html",
+            "patterns": [
+              {
+                "include": "source.swift"
+              }
+            ]
+          },
+          {
+            "begin": "~s\\[",
+            "beginCaptures": {
+              "0": {
+                "name": "punctuation.section.list.begin.elixir"
+              }
+            },
+            "end": "\\]",
+            "endCaptures": {
+              "0": {
+                "name": "punctuation.section.list.end.elixir"
+              }
+            },
+            "name": "string.quoted.single.html",
+            "patterns": [
+              {
+                "include": "source.swift"
+              }
+            ]
           }
         ]
       },
