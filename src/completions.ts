@@ -83,11 +83,28 @@ export const markupCompletionItemProvider: vscode.CompletionItemProvider = {
 export const stylesheetCompletionItemProvider: vscode.CompletionItemProvider = {
     async provideCompletionItems(document, position, token, context) {
         const staticSnippets = [
-            new vscode.SnippetString(
-                `\"\$\{1:class-name\}\" do
-\t\$\{2:modifiers\}
-end`
-            ),
+            // class
+            (() => {
+                const item = new vscode.CompletionItem("LiveView Native Class", vscode.CompletionItemKind.Snippet);
+                item.insertText = new vscode.SnippetString("\"${1:class-name}\" do\n\t${2:modifiers}\nend");
+                return item;
+            })(),
+            // colors
+            (() => {
+                const item = new vscode.CompletionItem("Color(red:green:blue:opacity:)", vscode.CompletionItemKind.Color);
+                item.insertText = new vscode.SnippetString("Color(.sRGB, red: ${1:1.0}, green: ${2:1.0}, blue: ${3:1.0}, opacity: ${4:1.0})");
+                return item;
+            })(),
+            (() => {
+                const item = new vscode.CompletionItem("Color(white:opacity:)", vscode.CompletionItemKind.Color);
+                item.insertText = new vscode.SnippetString("Color(.sRGB, white: ${1:1.0}, opacity: ${2:1.0})");
+                return item;
+            })(),
+            (() => {
+                const item = new vscode.CompletionItem("Color(hue:saturation:brightness:opacity:)", vscode.CompletionItemKind.Color);
+                item.insertText = new vscode.SnippetString("Color(hue: ${1:1.0}, saturation: ${2:1.0}, brightness: ${3:1.0}, opacity: ${4:1.0})");
+                return item;
+            })(),
         ];
 
         const word = document.getText(document.getWordRangeAtPosition(position));
@@ -149,11 +166,7 @@ end`
         }
 
         return [
-            ...(staticSnippets.map((snippet) => {
-                const item = new vscode.CompletionItem("LiveView Native Class", vscode.CompletionItemKind.Snippet);
-                item.insertText = snippet;
-                return item;
-            })),
+            ...staticSnippets,
             ...modifierCompletions,
             ...modifierArgumentCompletions
         ];
